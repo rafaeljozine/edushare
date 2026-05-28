@@ -1088,7 +1088,7 @@ function Home() {
                       </div>
 
                       <a
-                        href={`http://localhost:3000/uploads/${recurso.arquivo}`}
+                        href={`${API_URL}/uploads/${recurso.arquivo}`}
                         target="_blank"
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
                       >
