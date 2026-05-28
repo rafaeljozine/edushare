@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { pool } from "./db";
+import  pool  from "./db";
 import bcrypt from "bcrypt";
 
 import multer from "multer";
