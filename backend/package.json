@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx src/server.ts"
-  },
+  "build": "tsc",
+  "start": "node dist/server.js",
+  "dev": "tsx src/server.ts"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
