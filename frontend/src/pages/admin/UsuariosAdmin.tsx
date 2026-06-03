@@ -52,7 +52,6 @@ function UsuariosAdmin() {
     setMensagem
   ] = useState("");
 
-  // NOVO: utilizador a eliminar (null = modal fechado)
   const [
     utilizadorParaEliminar,
     setUtilizadorParaEliminar
@@ -150,7 +149,6 @@ function UsuariosAdmin() {
 
   }
 
-  // ALTERADO: abre o modal em vez de window.confirm
   async function eliminarUtilizador(
     id: number
   ) {
@@ -249,7 +247,6 @@ function UsuariosAdmin() {
 
       )}
 
-      {/* NOVO: Modal de confirmação */}
       {utilizadorParaEliminar && (
 
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -274,7 +271,18 @@ function UsuariosAdmin() {
                 onClick={() =>
                   setUtilizadorParaEliminar(null)
                 }
-                className="flex-1 px-6 py-3 rounded-2xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition"
+                className="
+                  flex-1
+                  px-6
+                  py-3
+                  rounded-2xl
+                  border
+                  border-gray-200
+                  text-gray-600
+                  font-medium
+                  hover:bg-gray-50
+                  transition
+                "
               >
 
                 Cancelar
@@ -287,7 +295,17 @@ function UsuariosAdmin() {
                     utilizadorParaEliminar.id
                   )
                 }
-                className="flex-1 px-6 py-3 rounded-2xl bg-red-700 hover:bg-red-800 text-white font-medium transition"
+                className="
+                  flex-1
+                  px-6
+                  py-3
+                  rounded-2xl
+                  bg-red-700
+                  hover:bg-red-800
+                  text-white
+                  font-medium
+                  transition
+                "
               >
 
                 Sim, eliminar
@@ -565,7 +583,6 @@ function UsuariosAdmin() {
 
                   )}
 
-                  {/* ALTERADO: só aparece para não-admins e não para o próprio utilizador logado */}
                   {user.role !== "ADMIN" &&
                    user.id !== userLogado.id && (
 

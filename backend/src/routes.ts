@@ -457,23 +457,30 @@ router.put(
 );
 
 router.delete(
-  "/recursos/:id",
-
+  "/users/:id",
   async (req, res) => {
 
     try {
 
+      const { id } = req.params;
+
       await pool.query(
-        `
-        DELETE FROM recursos
-        WHERE id=$1
-        `,
-        [req.params.id]
+        "DELETE FROM favoritos WHERE user_id = $1",
+        [id]
+      );
+
+      await pool.query(
+        "DELETE FROM recursos WHERE user_id = $1",
+        [id]
+      );
+
+      await pool.query(
+        "DELETE FROM users WHERE id = $1",
+        [id]
       );
 
       res.json({
-        mensagem:
-          "Removido"
+        sucesso: true
       });
 
     } catch (erro) {
@@ -481,8 +488,7 @@ router.delete(
       console.log(erro);
 
       res.status(500).json({
-        erro:
-          "Erro interno"
+        erro: "Erro ao eliminar utilizador"
       });
 
     }
