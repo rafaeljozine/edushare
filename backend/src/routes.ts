@@ -800,4 +800,38 @@ router.put(
   }
 );
 
+
+router.delete(
+  "/users/:id",
+  async (req, res) => {
+
+    try {
+
+      const { id } = req.params;
+
+      await pool.query(
+        `
+        DELETE FROM users
+        WHERE id = $1
+        `,
+        [id]
+      );
+
+      res.json({
+        sucesso: true
+      });
+
+    } catch (erro) {
+
+      console.log(erro);
+
+      res.status(500).json({
+        erro: "Erro ao eliminar utilizador"
+      });
+
+    }
+
+  }
+);
+
 export default router;

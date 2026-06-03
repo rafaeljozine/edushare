@@ -13,7 +13,8 @@ import {
   GraduationCap,
   Lock,
   Unlock,
-  Crown
+  Crown,
+  Trash2
 } from "lucide-react";
 
 interface UserType {
@@ -28,6 +29,7 @@ interface UserType {
 
 import API_URL
 from "../../services/api";
+
 function UsuariosAdmin() {
 
   const [
@@ -49,6 +51,12 @@ function UsuariosAdmin() {
     mensagem,
     setMensagem
   ] = useState("");
+
+  // NOVO: utilizador a eliminar (null = modal fechado)
+  const [
+    utilizadorParaEliminar,
+    setUtilizadorParaEliminar
+  ] = useState<UserType | null>(null);
 
   const userLogado =
     JSON.parse(
@@ -79,74 +87,103 @@ function UsuariosAdmin() {
 
   async function carregarUsers() {
 
-            try {
+    try {
 
-            const resposta =
-                await fetch(
-                `${API_URL}/users`
-                );
+      const resposta =
+        await fetch(
+          `${API_URL}/users`
+        );
 
-            const dados =
-                await resposta.json();
+      const dados =
+        await resposta.json();
 
-            setUsers(dados);
+      setUsers(dados);
 
-            } catch (erro) {
+    } catch (erro) {
 
-            console.log(erro);
+      console.log(erro);
 
-            }
+    }
 
-        }
+  }
 
-        async function alterarStatus(
-        id: number,
-        status: string
-        ) {
+  async function alterarStatus(
+    id: number,
+    status: string
+  ) {
 
-        try {
+    try {
 
-            const statusLimpo =
-            status?.trim();
+      const statusLimpo =
+        status?.trim();
 
-            const endpoint =
-            statusLimpo ===
-            "ATIVO"
-                ? "bloquear"
-                : "desbloquear";
+      const endpoint =
+        statusLimpo === "ATIVO"
+          ? "bloquear"
+          : "desbloquear";
 
-            const resposta =
-            await fetch(
-                `${API_URL}/users/${id}/${endpoint}`,
-                {
-                method: "PUT"
-                }
-            );
+      const resposta =
+        await fetch(
+          `${API_URL}/users/${id}/${endpoint}`,
+          {
+            method: "PUT"
+          }
+        );
 
-            if (
-            resposta.ok
-            ) {
+      if (resposta.ok) {
 
-            carregarUsers();
+        carregarUsers();
 
-            mostrarMensagem(
+        mostrarMensagem(
+          statusLimpo === "ATIVO"
+            ? "Utilizador bloqueado"
+            : "Utilizador desbloqueado"
+        );
 
-                statusLimpo ===
-                "ATIVO"
-                ? "Utilizador bloqueado"
-                : "Utilizador desbloqueado"
+      }
 
-            );
+    } catch (erro) {
 
-            }
+      console.log(erro);
 
-        } catch (erro) {
+    }
 
-            console.log(erro);
+  }
 
-        }
+  // ALTERADO: abre o modal em vez de window.confirm
+  async function eliminarUtilizador(
+    id: number
+  ) {
 
-        }
+    try {
+
+      const resposta =
+        await fetch(
+          `${API_URL}/users/${id}`,
+          {
+            method: "DELETE"
+          }
+        );
+
+      if (resposta.ok) {
+
+        mostrarMensagem(
+          "Utilizador eliminado"
+        );
+
+        setUtilizadorParaEliminar(null);
+
+        carregarUsers();
+
+      }
+
+    } catch (erro) {
+
+      console.log(erro);
+
+    }
+
+  }
 
   const utilizadoresFiltrados =
     useMemo(() => {
@@ -155,19 +192,13 @@ function UsuariosAdmin() {
 
         .filter((user) => {
 
-          if (
-            filtroStatus ===
-            "TODOS"
-          ) {
+          if (filtroStatus === "TODOS") {
 
             return true;
 
           }
 
-          return (
-            user.status ===
-            filtroStatus
-          );
+          return user.status === filtroStatus;
 
         })
 
@@ -187,50 +218,89 @@ function UsuariosAdmin() {
 
         });
 
-    }, [
-      users,
-      pesquisa,
-      filtroStatus
-    ]);
+    }, [users, pesquisa, filtroStatus]);
 
   const totalAdmins =
     users.filter(
-      (user) =>
-        user.role ===
-        "ADMIN"
+      (user) => user.role === "ADMIN"
     ).length;
 
   const totalAtivos =
     users.filter(
-      (user) =>
-        user.status ===
-        "ATIVO"
+      (user) => user.status === "ATIVO"
     ).length;
 
   const totalBloqueados =
     users.filter(
-      (user) =>
-        user.status ===
-        "BLOQUEADO"
+      (user) => user.status === "BLOQUEADO"
     ).length;
 
   return (
 
     <div className="min-h-screen bg-slate-100 p-8">
 
-      {
+      {mensagem && (
 
-        mensagem && (
+        <div className="fixed top-5 right-5 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50">
 
-          <div className="fixed top-5 right-5 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50">
+          {mensagem}
 
-            {mensagem}
+        </div>
+
+      )}
+
+      {/* NOVO: Modal de confirmação */}
+      {utilizadorParaEliminar && (
+
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+          <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full mx-4">
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+
+              Eliminar utilizador?
+
+            </h2>
+
+            <p className="text-gray-500 mb-6">
+
+              Tens a certeza que queres eliminar <strong>{utilizadorParaEliminar.nome}</strong>? Esta ação é irreversível.
+
+            </p>
+
+            <div className="flex gap-3">
+
+              <button
+                onClick={() =>
+                  setUtilizadorParaEliminar(null)
+                }
+                className="flex-1 px-6 py-3 rounded-2xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition"
+              >
+
+                Cancelar
+
+              </button>
+
+              <button
+                onClick={() =>
+                  eliminarUtilizador(
+                    utilizadorParaEliminar.id
+                  )
+                }
+                className="flex-1 px-6 py-3 rounded-2xl bg-red-700 hover:bg-red-800 text-white font-medium transition"
+              >
+
+                Sim, eliminar
+
+              </button>
+
+            </div>
 
           </div>
 
-        )
+        </div>
 
-      }
+      )}
 
       <div className="mb-10">
 
@@ -353,9 +423,7 @@ function UsuariosAdmin() {
               className="w-full border border-gray-200 rounded-2xl pl-12 pr-4 py-4 outline-none focus:border-blue-500"
               value={pesquisa}
               onChange={(e) =>
-                setPesquisa(
-                  e.target.value
-                )
+                setPesquisa(e.target.value)
               }
             />
 
@@ -365,9 +433,7 @@ function UsuariosAdmin() {
             className="border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:border-blue-500"
             value={filtroStatus}
             onChange={(e) =>
-              setFiltroStatus(
-                e.target.value
-              )
+              setFiltroStatus(e.target.value)
             }
           >
 
@@ -397,144 +463,141 @@ function UsuariosAdmin() {
 
       <div className="grid gap-5">
 
-        {
+        {utilizadoresFiltrados.map(
+          (user) => (
 
-          utilizadoresFiltrados.map(
-            (user) => (
+            <div
+              key={user.id}
+              className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition"
+            >
 
-              <div
-                key={user.id}
-                className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition"
-              >
+              <div className="flex justify-between items-center flex-wrap gap-5">
 
-                <div className="flex justify-between items-center flex-wrap gap-5">
+                <div className="flex items-center gap-5">
 
-                  <div className="flex items-center gap-5">
+                  <div className="w-20 h-20 rounded-2xl bg-blue-100 flex items-center justify-center">
 
-                    <div className="w-20 h-20 rounded-2xl bg-blue-100 flex items-center justify-center">
-
-                      <User
-                        size={35}
-                        className="text-blue-600"
-                      />
-
-                    </div>
-
-                    <div>
-
-                      <div className="flex items-center gap-3 flex-wrap">
-
-                        <h2 className="text-2xl font-bold text-gray-800">
-
-                          {user.nome}
-
-                        </h2>
-
-                        {
-
-                          user.role ===
-                          "ADMIN" && (
-
-                            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm flex items-center gap-2">
-
-                              <Crown size={14} />
-
-                              Admin
-
-                            </span>
-
-                          )
-
-                        }
-
-                      </div>
-
-                      <p className="text-gray-500 mt-2">
-
-                        {user.email}
-
-                      </p>
-
-                      <div className="flex gap-3 mt-4 flex-wrap">
-
-                        {
-
-                          user.curso && (
-
-                            <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm flex items-center gap-2">
-
-                              <GraduationCap size={14} />
-
-                              {user.curso}
-
-                            </span>
-
-                          )
-
-                        }
-
-                      </div>
-
-                    </div>
+                    <User
+                      size={35}
+                      className="text-blue-600"
+                    />
 
                   </div>
 
                   <div>
 
-                    {
+                    <div className="flex items-center gap-3 flex-wrap">
 
-                      user.role !==
-                      "ADMIN" &&
+                      <h2 className="text-2xl font-bold text-gray-800">
 
-                      user.id !==
-                      userLogado.id && (
+                        {user.nome}
 
-                        <button
+                      </h2>
 
-                          onClick={() =>
-                            alterarStatus(
-                              user.id,
-                              user.status
-                            )
-                          }
+                      {user.role === "ADMIN" && (
 
-                          className={`
-                            px-6 py-3 rounded-2xl text-white transition font-medium shadow-md
+                        <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm flex items-center gap-2">
 
-                            ${
-                              user.status ===
-                              "ATIVO"
-                                ? "bg-red-500 hover:bg-red-600"
-                                : "bg-blue-600 hover:bg-blue-700"
-                            }
-                          `}
-                        >
+                          <Crown size={14} />
 
-                          {
+                          Admin
 
-                            user.status ===
-                            "ATIVO"
-                              ? "Bloquear"
-                              : "Desbloquear"
+                        </span>
 
-                          }
+                      )}
 
-                        </button>
+                    </div>
 
-                      )
+                    <p className="text-gray-500 mt-2">
 
-                    }
+                      {user.email}
+
+                    </p>
+
+                    <div className="flex gap-3 mt-4 flex-wrap">
+
+                      {user.curso && (
+
+                        <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm flex items-center gap-2">
+
+                          <GraduationCap size={14} />
+
+                          {user.curso}
+
+                        </span>
+
+                      )}
+
+                    </div>
 
                   </div>
 
                 </div>
 
+                <div className="flex gap-3">
+
+                  {user.role !== "ADMIN" &&
+                   user.id !== userLogado.id && (
+
+                    <button
+                      onClick={() =>
+                        alterarStatus(
+                          user.id,
+                          user.status
+                        )
+                      }
+                      className={`
+                        px-6 py-3 rounded-2xl text-white transition font-medium shadow-md
+
+                        ${
+                          user.status === "ATIVO"
+                            ? "bg-red-500 hover:bg-red-600"
+                            : "bg-blue-600 hover:bg-blue-700"
+                        }
+                      `}
+                    >
+
+                      {user.status === "ATIVO"
+                        ? "Bloquear"
+                        : "Desbloquear"}
+
+                    </button>
+
+                  )}
+
+                  {/* ALTERADO: só aparece para não-admins e não para o próprio utilizador logado */}
+                  {user.role !== "ADMIN" &&
+                   user.id !== userLogado.id && (
+
+                    <button
+                      onClick={() =>
+                        setUtilizadorParaEliminar(user)
+                      }
+                      className="
+                        bg-red-700
+                        hover:bg-red-800
+                        text-white
+                        px-5
+                        py-3
+                        rounded-2xl
+                        shadow-md
+                      "
+                    >
+
+                      Eliminar
+
+                    </button>
+
+                  )}
+
+                </div>
+
               </div>
 
-            )
-          )
+            </div>
 
-        }
+          )
+        )}
 
       </div>
 
