@@ -124,7 +124,8 @@ function Home() {
 
       const dados =
         await resposta.json();
-
+      console.log("DADOS API:", dados);
+      
       setRecursos(dados);
 
     } catch (erro) {
@@ -1111,15 +1112,15 @@ function Home() {
 
                       
                       <a
-  href="https://edushare-vjma.onrender.com/uploads/1780556014959.pdf"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
->
+                          href="https://edushare-vjma.onrender.com/uploads/1780556014959.pdf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
+                        >
 
-  TESTE PDF
+                          TESTE PDF
 
-</a>
+                        </a>
 
                           
                     </div>
