@@ -30,6 +30,8 @@ interface Recurso {
   downloads: number;
 }
 
+import PdfPreview
+from "../components/PdfPreview";
 
 import API_URL
 from "../services/api";
@@ -811,15 +813,46 @@ function Instituicao() {
 
                     <div className="flex gap-5">
 
-                      <div className="w-20 h-20 rounded-2xl bg-blue-50 flex items-center justify-center text-4xl">
+                      <div>
 
-                        {
-                          obterIconeArquivo(
-                            recurso.ficheiro
-                          )
-                        }
+  {
+    recurso.ficheiro?.endsWith(".pdf")
 
-                      </div>
+    ? (
+
+      <PdfPreview
+        url={
+          `${API_URL}/uploads/${recurso.ficheiro}`
+        }
+      />
+
+    )
+
+    : (
+
+      <div className="
+      w-24
+      h-32
+      rounded-xl
+      bg-blue-50
+      flex
+      items-center
+      justify-center
+      text-5xl
+      ">
+
+        {
+          obterIconeArquivo(
+            recurso.ficheiro
+          )
+        }
+
+      </div>
+
+    )
+  }
+
+</div>
 
                       <div>
 
