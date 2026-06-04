@@ -17,7 +17,7 @@ import {
 interface Recurso {
   id: number;
   nome: string;
-  dono: string;
+  user_id: string;
   curso: string;
   disciplina: string;
   descricao: string;
@@ -168,7 +168,7 @@ function MateriaisAdmin() {
             ${recurso.nome}
             ${recurso.curso}
             ${recurso.disciplina}
-            ${recurso.dono}
+            ${recurso.user_id}
             `
               .toLowerCase();
 
@@ -498,7 +498,7 @@ function MateriaisAdmin() {
                           {" "}
                           <span className="font-medium text-blue-600">
 
-                            {recurso.dono}
+                            {recurso.user_id}
 
                           </span>
 

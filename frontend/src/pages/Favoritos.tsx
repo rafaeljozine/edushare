@@ -23,8 +23,8 @@ interface Recurso {
   descricao: string;
   curso: string;
   disciplina: string;
-  arquivo: string;
-  dono: string;
+  ficheiro: string;
+  user_id: string;
 }
 
 function Favoritos() {
@@ -278,7 +278,7 @@ function Favoritos() {
 
                       {
                         obterIconeArquivo(
-                          recurso.arquivo
+                          recurso.ficheiro
                         )
                       }
 
@@ -338,7 +338,7 @@ function Favoritos() {
                   </div>
 
                   <a
-                    href={`${API_URL}/uploads/${recurso.arquivo}`}
+                    href={`${API_URL}/uploads/${recurso.ficheiro}`}
                     target="_blank"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition flex items-center gap-2"
                   >
