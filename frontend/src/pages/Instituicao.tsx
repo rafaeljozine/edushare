@@ -807,7 +807,7 @@ function Instituicao() {
                               "
                             >
                               <Download size={18} />
-                              Baixar
+                              {recurso.ficheiro}
                             </a>
 
                         </>
