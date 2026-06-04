@@ -163,10 +163,10 @@ function Home() {
         nome
       );
 
-      {/*formData.append(
+      formData.append(
         "autor",
         autor
-      );*/ }
+      );
 
       formData.append(
         "disciplina",
@@ -188,7 +188,7 @@ function Home() {
         String(user.id)
       );
 
-      {/*formData.append(
+      formData.append(
         "visibilidade",
         visibilidade
       );
@@ -196,20 +196,28 @@ function Home() {
       formData.append(
         "status",
         "DISPONIVEL"
-      );*/ }
+      );
 
       formData.append(
         "arquivo",
         arquivo
       );
 
-      await fetch(
-        `${API_URL}/recursos`,
-        {
-          method: "POST",
-          body: formData
+      const resposta = await fetch(
+          `${API_URL}/recursos`,
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+        const dados = await resposta.json();
+
+        console.log(dados);
+
+        if (!resposta.ok) {
+          throw new Error("Erro ao publicar");
         }
-      );
 
       limparFormulario();
 
@@ -419,15 +427,9 @@ function Home() {
     )];
 
   const meusMateriais =
-    useMemo(() => {
+  useMemo(() => {
 
-      return recursos
-
-        .filter(
-          (recurso) =>
-            recurso.dono ===
-            user.nome
-        )
+    return recursos
 
         .filter((recurso) => {
 

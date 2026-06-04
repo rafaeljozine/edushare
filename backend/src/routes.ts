@@ -192,47 +192,41 @@ router.post(
         nome,
         disciplina,
         descricao,
-        curso
+        curso,
+        user_id
       } = req.body;
 
-      const ficheiro =
-        req.file?.filename;
+      const ficheiro = req.file?.filename;
 
-      const user_id =
-        req.body.user_id;
-
-      const resultado =
-        await pool.query(
-          `
-          INSERT INTO recursos
-          (
-            nome,
-            descricao,
-            ficheiro,
-            curso,
-            disciplina,
-            user_id
-          )
-          VALUES($1,$2,$3,$4,$5,$6)
-          RETURNING *
-          `,
-          [
-            nome,
-            descricao,
-            ficheiro,
-            curso,
-            disciplina,
-            user_id
-          ]
-        );
-
-      res.json(
-        resultado.rows[0]
+      const resultado = await pool.query(
+        `
+        INSERT INTO recursos
+        (
+          nome,
+          disciplina,
+          descricao,
+          curso,
+          ficheiro,
+          user_id
+        )
+        VALUES ($1,$2,$3,$4,$5,$6)
+        RETURNING *
+        `,
+        [
+          nome,
+          disciplina,
+          descricao,
+          curso,
+          ficheiro,
+          user_id
+        ]
       );
+
+      res.json(resultado.rows[0]);
 
     } catch (erro) {
 
-      console.log(erro);
+      console.log("ERRO AO INSERIR RECURSO:", erro);
 
       res.status(500).json({
         erro: "Erro interno"
