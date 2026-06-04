@@ -26,7 +26,10 @@ interface Recurso {
   ficheiro: string;
   visibilidade: string;
   status: string;
+  created_at: string;
+  downloads: number;
 }
+
 
 import API_URL
 from "../services/api";
@@ -322,6 +325,34 @@ function Instituicao() {
         )
 
     )];
+
+    async function baixarArquivo(
+  recurso: Recurso
+) {
+
+  try {
+
+    await fetch(
+      `${API_URL}/recursos/${recurso.id}/download`,
+      {
+        method: "PUT"
+      }
+    );
+
+    window.open(
+      `${API_URL}/uploads/${recurso.ficheiro}`,
+      "_blank"
+    );
+
+    carregarRecursos();
+
+  } catch (erro) {
+
+    console.log(erro);
+
+  }
+
+}
 
   return (
 
@@ -763,17 +794,17 @@ function Instituicao() {
                 <div
                 key={recurso.id}
                 className="
-                  bg-white
-                  rounded-3xl
-                  p-8
-                  shadow-md
-                  hover:shadow-2xl
-                  hover:-translate-y-1
-                  transition-all
-                  duration-300
-                  border
-                  border-gray-100
-                "
+                bg-white
+                rounded-4xl
+                p-8
+                shadow-lg
+                hover:shadow-2xl
+                hover:-translate-y-2
+                transition-all
+                duration-300
+                border
+                border-slate-100
+              "
               >
 
                   <div className="flex justify-between items-start gap-6 flex-wrap">
@@ -792,7 +823,12 @@ function Instituicao() {
 
                       <div>
 
-                        <h3 className="text-2xl font-bold text-gray-800">
+                        <h3 className="
+                        text-3xl
+                        font-extrabold
+                        text-gray-800
+                        tracking-tight
+                        ">
 
                           {
                             recurso.nome
@@ -815,7 +851,19 @@ function Instituicao() {
                           }
 
                         </p>
+                        <p className="text-sm text-gray-400 mt-2">
+                          Publicado em {
+                            new Date(
+                              (recurso as any).created_at
+                            ).toLocaleDateString("pt-PT")
+                          }
+                        </p>
+                          <p className="text-sm text-gray-400">
 
+                            ⬇️ {recurso.downloads || 0}
+                            downloads
+
+                          </p>
                         <div className="flex gap-3 mt-4 flex-wrap">
 
                           <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm">
@@ -833,6 +881,22 @@ function Instituicao() {
                             }
 
                           </span>
+                          {
+                            favoritos.includes(recurso.id) && (
+
+                              <span className="
+                                bg-yellow-100
+                                text-yellow-700
+                                px-4
+                                py-2
+                                rounded-full
+                                text-sm
+                              ">
+                                ⭐ Favorito
+                              </span>
+
+                            )
+                          }
                             <span
                               className="
                                 bg-green-100
@@ -860,7 +924,14 @@ function Instituicao() {
 
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="
+                    flex
+                    flex-col
+                    items-end
+                    justify-between
+                    gap-4
+                    min-w-45
+                    ">
 
                     {
 
@@ -910,28 +981,30 @@ function Instituicao() {
                             </button>
                             <>
 
-  <a
-    href={`${API_URL}/uploads/${recurso.ficheiro}`}
-    className="
-  bg-linear-to-r
-  from-blue-600
-  to-blue-700
-  text-white
-  px-6
-  py-3
-  rounded-2xl
-  flex
-  items-center
-  gap-2
-  shadow-lg
-  hover:scale-105
-  transition
-"
-  >
-    <Download size={18} />
-    Baixar
-  </a>
-</>
+                          <button
+  onClick={() =>
+    baixarArquivo(
+      recurso
+    )
+  }
+  className="
+    bg-blue-600
+    text-white
+    px-6
+    py-3
+    rounded-2xl
+    flex
+    items-center
+    gap-2
+  "
+>
+
+  <Download size={18} />
+
+  Baixar
+
+</button>
+                        </>
 
                         </>
 

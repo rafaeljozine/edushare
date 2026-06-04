@@ -893,4 +893,38 @@ router.delete(
   }
 );
 
+router.put(
+  "/recursos/:id/download",
+
+  async (req, res) => {
+
+    try {
+
+      await pool.query(
+        `
+        UPDATE recursos
+        SET downloads =
+        COALESCE(downloads, 0) + 1
+        WHERE id = $1
+        `,
+        [req.params.id]
+      );
+
+      res.json({
+        sucesso: true
+      });
+
+    } catch (erro) {
+
+      console.log(erro);
+
+      res.status(500).json({
+        erro: "Erro interno"
+      });
+
+    }
+
+  }
+);
+
 export default router;
