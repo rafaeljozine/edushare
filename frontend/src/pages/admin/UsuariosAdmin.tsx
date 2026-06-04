@@ -600,7 +600,7 @@ function UsuariosAdmin() {
                         shadow-md
                       "
                     >
-
+                      <Trash2 size={18} />
                       Eliminar
 
                     </button>
