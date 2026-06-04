@@ -190,42 +190,45 @@ router.post(
 
       const {
         nome,
-        autor,
         disciplina,
         descricao,
-        dono,
         curso
       } = req.body;
 
-      const arquivo = req.file?.filename;
+      const ficheiro =
+        req.file?.filename;
 
-      const resultado = await pool.query(
-        `
-        INSERT INTO recursos
-        (
-          nome,
-          autor,
-          disciplina,
-          descricao,
-          dono,
-          curso,
-          arquivo
-        )
-        VALUES($1, $2, $3, $4, $5, $6, $7)
-        RETURNING *
-        `,
-        [
-          nome,
-          autor,
-          disciplina,
-          descricao,
-          dono,
-          curso,
-          arquivo
-        ]
+      const user_id =
+        req.body.user_id;
+
+      const resultado =
+        await pool.query(
+          `
+          INSERT INTO recursos
+          (
+            nome,
+            descricao,
+            ficheiro,
+            curso,
+            disciplina,
+            user_id
+          )
+          VALUES($1,$2,$3,$4,$5,$6)
+          RETURNING *
+          `,
+          [
+            nome,
+            descricao,
+            ficheiro,
+            curso,
+            disciplina,
+            user_id
+          ]
+        );
+
+      res.json(
+        resultado.rows[0]
       );
-
-      res.json(resultado.rows[0]);
 
     } catch (erro) {
 

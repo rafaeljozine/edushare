@@ -163,10 +163,10 @@ function Home() {
         nome
       );
 
-      formData.append(
+      {/*formData.append(
         "autor",
         autor
-      );
+      );*/ }
 
       formData.append(
         "disciplina",
@@ -184,11 +184,11 @@ function Home() {
       );
 
       formData.append(
-        "dono",
-        user.nome
+        "user_id",
+        String(user.id)
       );
 
-      formData.append(
+      {/*formData.append(
         "visibilidade",
         visibilidade
       );
@@ -196,7 +196,7 @@ function Home() {
       formData.append(
         "status",
         "DISPONIVEL"
-      );
+      );*/ }
 
       formData.append(
         "arquivo",
