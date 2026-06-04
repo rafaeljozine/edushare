@@ -434,7 +434,18 @@ function Instituicao() {
       Biblioteca Académica
 
     </p>
+            <p className="text-blue-100 text-sm">
 
+  Bem-vindo,
+  {
+    JSON.parse(
+      localStorage.getItem(
+        "user"
+      ) || "{}"
+    ).nome
+  }
+
+</p>
   </div>
 
 </div>
@@ -497,7 +508,7 @@ function Instituicao() {
 
     <div>
 
-      <h2 className="text-6xl font-bold leading-tight tracking-tight max-w-4xl">
+      <h2 className="text-6xl font-black leading-tight tracking-tight max-w-4xl">
 
         Conhecimento partilhado
         para toda a comunidade académica.
@@ -576,7 +587,62 @@ function Instituicao() {
   </div>
 
 </section>
+<section className="grid md:grid-cols-4 gap-5 mb-10">
 
+  <div className="bg-white p-6 rounded-3xl shadow-md">
+    <p className="text-gray-500">
+      Recursos
+    </p>
+
+    <h2 className="text-4xl font-bold text-blue-600">
+
+      {materiaisPublicos.length}
+
+    </h2>
+  </div>
+
+  <div className="bg-white p-6 rounded-3xl shadow-md">
+    <p className="text-gray-500">
+      Cursos
+    </p>
+
+    <h2 className="text-4xl font-bold text-green-600">
+
+      {cursos.length}
+
+    </h2>
+  </div>
+
+  <div className="bg-white p-6 rounded-3xl shadow-md">
+    <p className="text-gray-500">
+      Favoritos
+    </p>
+
+    <h2 className="text-4xl font-bold text-yellow-600">
+
+      {favoritos.length}
+
+    </h2>
+  </div>
+
+  <div className="bg-white p-6 rounded-3xl shadow-md">
+    <p className="text-gray-500">
+      PDFs
+    </p>
+
+    <h2 className="text-4xl font-bold text-red-600">
+
+      {
+        materiaisPublicos.filter(
+          r =>
+            r.ficheiro?.includes(".pdf")
+        ).length
+      }
+
+    </h2>
+  </div>
+
+</section>
         <section className="bg-white rounded-3xl shadow-lg p-6 mb-10">
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -666,6 +732,28 @@ function Instituicao() {
             </div>
 
           </div>
+          {
+  materiaisPublicos.length === 0 && (
+
+    <div className="bg-white rounded-3xl p-12 text-center">
+
+      <h3 className="text-2xl font-bold">
+
+        Nenhum material encontrado
+
+      </h3>
+
+      <p className="text-gray-500 mt-3">
+
+        Tente alterar os filtros
+        ou a pesquisa.
+
+      </p>
+
+    </div>
+
+  )
+}
 
           <div className="grid gap-6">
 
@@ -673,9 +761,20 @@ function Instituicao() {
               (recurso) => (
 
                 <div
-                  key={recurso.id}
-                  className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100"
-                >
+                key={recurso.id}
+                className="
+                  bg-white
+                  rounded-3xl
+                  p-8
+                  shadow-md
+                  hover:shadow-2xl
+                  hover:-translate-y-1
+                  transition-all
+                  duration-300
+                  border
+                  border-gray-100
+                "
+              >
 
                   <div className="flex justify-between items-start gap-6 flex-wrap">
 
@@ -734,7 +833,27 @@ function Instituicao() {
                             }
 
                           </span>
-
+                            <span
+                              className="
+                                bg-green-100
+                                text-green-700
+                                px-4
+                                py-2
+                                rounded-full
+                                text-sm
+                              "
+                            >
+                              {recurso.status}
+                            </span>
+                            <span
+                              className={
+                                recurso.visibilidade === "PUBLICO"
+                                  ? "bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm"
+                                  : "bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm"
+                              }
+                            >
+                              {recurso.visibilidade}
+                            </span>
                         </div>
 
                       </div>
@@ -790,31 +909,24 @@ function Instituicao() {
 
                             </button>
                             <>
-  <p>
-    Ficheiro:
-    {String(recurso.ficheiro)}
-  </p>
-
-  <p>
-    URL:
-    {`${API_URL}/uploads/${recurso.ficheiro}`}
-  </p>
 
   <a
     href={`${API_URL}/uploads/${recurso.ficheiro}`}
-    target="_blank"
-    rel="noopener noreferrer"
     className="
-      bg-blue-600
-      text-white
-      px-5
-      py-3
-      rounded-2xl
-      flex
-      items-center
-      gap-2
-      hover:bg-blue-700
-    "
+  bg-linear-to-r
+  from-blue-600
+  to-blue-700
+  text-white
+  px-6
+  py-3
+  rounded-2xl
+  flex
+  items-center
+  gap-2
+  shadow-lg
+  hover:scale-105
+  transition
+"
   >
     <Download size={18} />
     Baixar
