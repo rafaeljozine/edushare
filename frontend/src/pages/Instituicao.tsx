@@ -19,7 +19,7 @@ interface Recurso {
   id: number;
   nome: string;
   autor: string;
-  dono: string;
+  user_id: number | null;
   disciplina: string;
   descricao: string;
   curso: string;
@@ -745,12 +745,12 @@ function Instituicao() {
 
                     {
 
-                        recurso.dono !==
+                        recurso.user_id !==
                         JSON.parse(
                         localStorage.getItem(
                             "user"
                         ) || "{}"
-                        ).nome
+                        ).id
 
                         ? (
 
@@ -791,16 +791,23 @@ function Instituicao() {
                             </button>
 
                             <a
-  href="#"
-  onClick={() => {
-    console.log(recurso);
-  }}
->
-
-                            <Download size={18} />
-
-                            Baixar
-
+                              href={`${API_URL}/uploads/${recurso.ficheiro}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="
+                                bg-blue-600
+                                text-white
+                                px-5
+                                py-3
+                                rounded-2xl
+                                flex
+                                items-center
+                                gap-2
+                                hover:bg-blue-700
+                              "
+                            >
+                              <Download size={18} />
+                              Baixar
                             </a>
 
                         </>
