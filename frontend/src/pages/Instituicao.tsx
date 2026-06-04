@@ -789,7 +789,7 @@ function Instituicao() {
                             />
 
                             </button>
-
+                                console.log(recurso);
                             <a
                               href={`${API_URL}/uploads/${recurso.ficheiro}`}
                               target="_blank"
