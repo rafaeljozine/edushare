@@ -434,8 +434,8 @@ function Home() {
 
       .filter(
         (recurso) =>
-          recurso.user_id ===
-          user.id
+          recurso.user_id == user.id
+          || recurso.user_id == null
       )
 
         .filter((recurso) => {
