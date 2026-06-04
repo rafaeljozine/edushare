@@ -27,7 +27,7 @@ interface Recurso {
   disciplina: string;
   curso: string;
   ficheiro: string | null;
-  user_id: number | null;
+  user_id: number;
 
   autor: string;
   visibilidade: string;
@@ -1101,7 +1101,7 @@ function Home() {
                         target="_blank"
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
                       >
-
+                        
                         Baixar Material
 
                       </a>

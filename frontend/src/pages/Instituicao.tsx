@@ -19,7 +19,7 @@ interface Recurso {
   id: number;
   nome: string;
   autor: string;
-  user_id: number | null;
+  user_id: number;
   disciplina: string;
   descricao: string;
   curso: string;
@@ -789,7 +789,6 @@ function Instituicao() {
                             />
 
                             </button>
-                                console.log(recurso);
                             <a
                               href={`${API_URL}/uploads/${recurso.ficheiro}`}
                               target="_blank"

@@ -188,6 +188,14 @@ router.post(
 
     try {
 
+      console.log("========== NOVO UPLOAD ==========");
+
+      console.log("BODY:");
+      console.log(req.body);
+
+      console.log("FILE:");
+      console.log(req.file);
+
       const {
         nome,
         autor,
@@ -200,6 +208,9 @@ router.post(
       } = req.body;
 
       const ficheiro = req.file?.filename;
+
+      console.log("FICHEIRO GRAVADO:");
+      console.log(ficheiro);
 
       const resultado = await pool.query(
         `
@@ -222,23 +233,30 @@ router.post(
         RETURNING *
         `,
         [
-        nome,
-        autor,
-        disciplina,
-        descricao,
-        curso,
-        ficheiro,
-        user_id,
-        visibilidade,
-        status
-      ]
+          nome,
+          autor,
+          disciplina,
+          descricao,
+          curso,
+          ficheiro,
+          user_id,
+          visibilidade,
+          status
+        ]
       );
+
+      console.log("REGISTO INSERIDO:");
+      console.log(resultado.rows[0]);
 
       res.json(resultado.rows[0]);
 
     } catch (erro) {
 
-      console.log("ERRO AO INSERIR RECURSO:", erro);
+      console.log(
+        "ERRO AO INSERIR RECURSO:"
+      );
+
+      console.log(erro);
 
       res.status(500).json({
         erro: "Erro interno"
