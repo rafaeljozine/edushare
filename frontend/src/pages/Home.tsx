@@ -899,7 +899,19 @@ function Home() {
           <div className="grid gap-6">
 
             {meusMateriais.map(
-              (recurso) => (
+  (recurso) => {
+
+    console.log(
+      "RECURSO COMPLETO:",
+      recurso
+    );
+
+    console.log(
+      "FICHEIRO:",
+      recurso.ficheiro
+    );
+
+    return (
 
                 <div
                   key={recurso.id}
@@ -1096,25 +1108,29 @@ function Home() {
 
                       </div>
 
+
+                      
                       <a
-                        href={`${API_URL}/uploads/${recurso.ficheiro}`}
-                        target="_blank"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
-                      >
-                        
-                        Baixar Material
+  href="https://edushare-vjma.onrender.com/uploads/1780556014959.pdf"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
+>
 
-                      </a>
+  TESTE PDF
 
+</a>
+
+                          
                     </div>
 
                   )}
 
                 </div>
 
-              )
-            )}
-
+              );
+             })
+              }
           </div>
 
         </section>
