@@ -23,12 +23,13 @@ from "../services/api";
 interface Recurso {
   id: number;
   nome: string;
-  autor: string;
-  dono: string;
-  disciplina: string;
   descricao: string;
+  disciplina: string;
   curso: string;
-  arquivo: string | null;
+  ficheiro: string | null;
+  user_id: number | null;
+
+  autor: string;
   visibilidade: string;
   status: string;
 }
@@ -430,6 +431,12 @@ function Home() {
   useMemo(() => {
 
     return recursos
+
+      .filter(
+        (recurso) =>
+          recurso.user_id ===
+          user.id
+      )
 
         .filter((recurso) => {
 
@@ -907,7 +914,7 @@ function Home() {
 
                         {
                           obterIconeArquivo(
-                            recurso.arquivo
+                            recurso.ficheiro
                           )
                         }
 
@@ -952,7 +959,7 @@ function Home() {
                           <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
 
                             {
-                              recurso.visibilidade
+                              recurso.ficheiro
                             }
 
                           </span>
@@ -1071,7 +1078,7 @@ function Home() {
 
                   </div>
 
-                  {recurso.arquivo && (
+                  {recurso.ficheiro && (
 
                     <div className="mt-8 pt-5 border-t border-gray-200 flex justify-between items-center flex-wrap gap-4">
 
@@ -1090,7 +1097,7 @@ function Home() {
                       </div>
 
                       <a
-                        href={`${API_URL}/uploads/${recurso.arquivo}`}
+                        href={`${API_URL}/uploads/${recurso.ficheiro}`}
                         target="_blank"
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
                       >

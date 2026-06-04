@@ -190,10 +190,13 @@ router.post(
 
       const {
         nome,
+        autor,
         disciplina,
         descricao,
         curso,
-        user_id
+        user_id,
+        visibilidade,
+        status
       } = req.body;
 
       const ficheiro = req.file?.filename;
@@ -203,23 +206,32 @@ router.post(
         INSERT INTO recursos
         (
           nome,
+          autor,
           disciplina,
           descricao,
           curso,
           ficheiro,
-          user_id
+          user_id,
+          visibilidade,
+          status
         )
-        VALUES ($1,$2,$3,$4,$5,$6)
+        VALUES
+        (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9
+        )
         RETURNING *
         `,
         [
-          nome,
-          disciplina,
-          descricao,
-          curso,
-          ficheiro,
-          user_id
-        ]
+        nome,
+        autor,
+        disciplina,
+        descricao,
+        curso,
+        ficheiro,
+        user_id,
+        visibilidade,
+        status
+      ]
       );
 
       res.json(resultado.rows[0]);
