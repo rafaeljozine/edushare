@@ -482,7 +482,33 @@ router.put(
 
   }
 );
+router.delete(
+  "/recursos/:id",
+  async (req, res) => {
 
+    try {
+
+      await pool.query(
+        "DELETE FROM recursos WHERE id = $1",
+        [req.params.id]
+      );
+
+      res.json({
+        sucesso: true
+      });
+
+    } catch (erro) {
+
+      console.log(erro);
+
+      res.status(500).json({
+        erro: "Erro interno"
+      });
+
+    }
+
+  }
+);
 router.delete(
   "/users/:id",
   async (req, res) => {

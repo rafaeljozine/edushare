@@ -789,25 +789,37 @@ function Instituicao() {
                             />
 
                             </button>
-                            <a
-                              href={`${API_URL}/uploads/${recurso.ficheiro}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="
-                                bg-blue-600
-                                text-white
-                                px-5
-                                py-3
-                                rounded-2xl
-                                flex
-                                items-center
-                                gap-2
-                                hover:bg-blue-700
-                              "
-                            >
-                              <Download size={18} />
-                              {recurso.ficheiro}
-                            </a>
+                            <>
+  <p>
+    Ficheiro:
+    {String(recurso.ficheiro)}
+  </p>
+
+  <p>
+    URL:
+    {`${API_URL}/uploads/${recurso.ficheiro}`}
+  </p>
+
+  <a
+    href={`${API_URL}/uploads/${recurso.ficheiro}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="
+      bg-blue-600
+      text-white
+      px-5
+      py-3
+      rounded-2xl
+      flex
+      items-center
+      gap-2
+      hover:bg-blue-700
+    "
+  >
+    <Download size={18} />
+    Baixar
+  </a>
+</>
 
                         </>
 
