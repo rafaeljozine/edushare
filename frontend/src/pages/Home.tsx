@@ -14,7 +14,8 @@ import {
   Pencil,
   Trash2,
   Globe,
-  Lock
+  Lock,
+  Download
 } from "lucide-react";
 
 import API_URL
@@ -124,7 +125,6 @@ function Home() {
 
       const dados =
         await resposta.json();
-      console.log("DADOS API:", dados);
       
       setRecursos(dados);
 
@@ -574,9 +574,7 @@ function Home() {
               </h1>
 
               <p className="text-blue-100 text-sm">
-
-                Meus Materiais
-
+                Bem-vindo, {user.nome}
               </p>
 
             </div>
@@ -599,7 +597,7 @@ function Home() {
 
       <main className="max-w-7xl mx-auto p-6">
 
-        <section className="grid md:grid-cols-3 gap-5 mb-10">
+        <section className="grid md:grid-cols-4 gap-5 mb-10">
 
           <div className="bg-white p-6 rounded-3xl shadow-md">
 
@@ -663,6 +661,20 @@ function Home() {
 
           </div>
 
+              <div className="bg-white p-6 rounded-3xl shadow-md">
+              <p className="text-gray-500">
+                Total de PDFs
+              </p>
+
+              <h2 className="text-4xl font-bold text-red-500 mt-2">
+                {
+                  meusMateriais.filter(
+                    r =>
+                      r.ficheiro?.includes(".pdf")
+                  ).length
+                }
+              </h2>
+            </div>
         </section>
 
         <section className="bg-white p-8 rounded-3xl shadow-lg mb-10">
@@ -763,7 +775,22 @@ function Home() {
 
             </select>
 
-            <label className="bg-blue-600 text-white rounded-2xl flex items-center justify-center cursor-pointer p-4">
+            <label
+  className="
+    border-2
+    border-dashed
+    border-blue-300
+    bg-blue-50
+    text-blue-700
+    rounded-2xl
+    flex
+    items-center
+    justify-center
+    cursor-pointer
+    p-4
+    h-15
+  "
+>
 
               {
                 arquivo
@@ -824,7 +851,18 @@ function Home() {
 
             }}
 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl mt-6"
+            className="
+              bg-blue-600
+              hover:bg-blue-700
+              text-white
+              px-8
+              py-4
+              rounded-2xl
+              mt-6
+              shadow-lg
+              hover:shadow-xl
+              transition
+            "
           >
 
             {
@@ -898,25 +936,43 @@ function Home() {
           </div>
 
           <div className="grid gap-6">
+              {meusMateriais.length === 0 && (
 
+              <div className="bg-white rounded-3xl p-10 text-center">
+
+                <h3 className="text-2xl font-bold text-gray-700">
+
+                  Nenhum material encontrado
+
+                </h3>
+
+                <p className="text-gray-500 mt-3">
+
+                  Publique o primeiro material
+                  ou ajuste os filtros.
+
+                </p>
+
+              </div>
+
+            )}
             {meusMateriais.map(
   (recurso) => {
-
-    console.log(
-      "RECURSO COMPLETO:",
-      recurso
-    );
-
-    console.log(
-      "FICHEIRO:",
-      recurso.ficheiro
-    );
 
     return (
 
                 <div
                   key={recurso.id}
-                  className="bg-slate-50 border border-gray-200 rounded-3xl p-6 hover:shadow-lg transition"
+                  className="
+                  bg-white
+                  border
+                  border-gray-200
+                  rounded-3xl
+                  p-6
+                  hover:shadow-xl
+                  transition-all
+                  duration-300
+                "
                 >
 
                   <div className="flex justify-between items-start flex-wrap gap-5">
@@ -978,7 +1034,15 @@ function Home() {
                           </span>
 
                           <span className="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm">
-
+                            <span
+                            className={
+                                recurso.visibilidade === "PUBLICO"
+                                  ? "bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm"
+                                  : "bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm"
+                              }
+                            >
+                              {recurso.visibilidade}
+                            </span>
                             {
                               recurso.status
                             }
@@ -1074,11 +1138,22 @@ function Home() {
 
                         title="Remover"
 
-                        onClick={() =>
-                          removerMaterial(
-                            recurso.id
-                          )
-                        }
+                        onClick={() => {
+
+                          const confirmar =
+                            window.confirm(
+                              "Deseja eliminar este material?"
+                            );
+
+                          if (confirmar) {
+
+                            removerMaterial(
+                              recurso.id
+                            );
+
+                          }
+
+                        }}
 
                         className="bg-red-50 hover:bg-red-100 text-red-600 p-3 rounded-xl transition"
                       >
@@ -1118,7 +1193,8 @@ function Home() {
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
                         >
 
-                          TESTE PDF
+                          <Download size={18} />
+                          Baixar Material
 
                         </a>
 
