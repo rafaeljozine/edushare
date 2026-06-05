@@ -20,6 +20,7 @@ import {
 
 import API_URL
 from "../services/api";
+import MaterialPreview from "../components/MaterialPreview";
 
 interface Recurso {
   id: number;
@@ -35,6 +36,11 @@ interface Recurso {
   status: string;
 }
 
+interface Curso {
+  nome: string;
+  ativo: boolean;
+}
+
 function Home() {
 
   const navigate = useNavigate();
@@ -45,6 +51,9 @@ function Home() {
 
   const [recursos, setRecursos] =
     useState<Recurso[]>([]);
+
+  const [cursosDisponiveis, setCursosDisponiveis] =
+    useState<Curso[]>([]);
 
   const [pesquisa, setPesquisa] =
     useState("");
@@ -98,8 +107,18 @@ function Home() {
   useEffect(() => {
 
     carregarRecursos();
+    carregarCursos();
 
   }, []);
+
+  async function carregarCursos() {
+    try {
+      const resposta = await fetch(`${API_URL}/cursos`);
+      if (resposta.ok) setCursosDisponiveis(await resposta.json());
+    } catch (erro) {
+      console.log(erro);
+    }
+  }
 
   function mostrarMensagem(
     texto: string
@@ -597,7 +616,7 @@ function Home() {
 
       <main className="max-w-7xl mx-auto p-6">
 
-        <section className="grid md:grid-cols-4 gap-5 mb-10">
+        <section className="grid md:grid-cols-3 gap-5 mb-10">
 
           <div className="bg-white p-6 rounded-3xl shadow-md">
 
@@ -661,20 +680,6 @@ function Home() {
 
           </div>
 
-              <div className="bg-white p-6 rounded-3xl shadow-md">
-              <p className="text-gray-500">
-                Total de PDFs
-              </p>
-
-              <h2 className="text-4xl font-bold text-red-500 mt-2">
-                {
-                  meusMateriais.filter(
-                    r =>
-                      r.ficheiro?.includes(".pdf")
-                  ).length
-                }
-              </h2>
-            </div>
         </section>
 
         <section className="bg-white p-8 rounded-3xl shadow-lg mb-10">
@@ -741,17 +746,13 @@ function Home() {
                 Curso
               </option>
 
-              <option>
-                Informática
-              </option>
-
-              <option>
-                Direito
-              </option>
-
-              <option>
-                Medicina
-              </option>
+              {cursosDisponiveis
+                .filter((item) => item.ativo)
+                .map((item) => (
+                  <option key={item.nome} value={item.nome}>
+                    {item.nome}
+                  </option>
+                ))}
 
             </select>
 
@@ -974,6 +975,10 @@ function Home() {
                   duration-300
                 "
                 >
+
+                  <div className="mb-6">
+                    <MaterialPreview ficheiro={recurso.ficheiro} nome={recurso.nome} />
+                  </div>
 
                   <div className="flex justify-between items-start flex-wrap gap-5">
 

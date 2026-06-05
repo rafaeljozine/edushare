@@ -13,8 +13,6 @@ interface UserType {
   status: "ATIVO" | "BLOQUEADO";
 }
 
-const cursos = ["Informática", "Direito", "Contabilidade", "Engenharia Civil", "Medicina", "Administração"];
-
 function UsuariosAdmin() {
   const navigate = useNavigate();
   const userLogado = JSON.parse(localStorage.getItem("user") || "{}");
@@ -24,8 +22,14 @@ function UsuariosAdmin() {
   const [editando, setEditando] = useState<UserType | null>(null);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
+  const [cursos, setCursos] = useState<string[]>([]);
 
-  useEffect(() => { carregarUsers(); }, []);
+  useEffect(() => {
+    carregarUsers();
+    fetch(`${API_URL}/cursos`).then((resposta) => resposta.json()).then((dados) =>
+      setCursos(dados.map((curso: { nome: string }) => curso.nome))
+    );
+  }, []);
 
   async function carregarUsers() {
     const resposta = await fetch(`${API_URL}/users`);

@@ -721,6 +721,19 @@ router.post(
         recurso_id
       } = req.body;
 
+      const recurso = await pool.query(
+        "SELECT user_id FROM recursos WHERE id=$1",
+        [recurso_id]
+      );
+
+      if (!recurso.rows[0]) {
+        return res.status(404).json({ erro: "Material não encontrado" });
+      }
+
+      if (String(recurso.rows[0].user_id) === String(user_id)) {
+        return res.status(400).json({ erro: "Não pode favoritar o seu próprio material" });
+      }
+
       const existe =
         await pool.query(
           `
@@ -907,6 +920,133 @@ router.get(
 
   }
 );
+
+router.get("/cursos", async (_, res) => {
+  try {
+    const resultado = await pool.query(`
+      SELECT c.id, c.nome, c.descricao, c.ativo,
+        COUNT(DISTINCT r.id)::int AS total_materiais
+      FROM cursos c
+      LEFT JOIN recursos r ON r.curso=c.nome AND r.visibilidade='PUBLICO' AND r.status='DISPONIVEL'
+      GROUP BY c.id
+      ORDER BY c.nome
+    `);
+    res.json(resultado.rows);
+  } catch (erro) {
+    console.log(erro);
+    res.status(500).json({ erro: "Erro ao buscar cursos" });
+  }
+});
+
+router.post("/cursos", async (req, res) => {
+  try {
+    const nome = String(req.body.nome || "").trim();
+    const descricao = String(req.body.descricao || "").trim();
+    if (!nome) return res.status(400).json({ erro: "O nome do curso é obrigatório" });
+    const resultado = await pool.query(
+      "INSERT INTO cursos(nome, descricao) VALUES($1,$2) RETURNING *",
+      [nome, descricao]
+    );
+    res.status(201).json(resultado.rows[0]);
+  } catch (erro: any) {
+    res.status(erro?.code === "23505" ? 409 : 500).json({
+      erro: erro?.code === "23505" ? "Este curso já existe" : "Erro ao criar curso"
+    });
+  }
+});
+
+router.put("/cursos/:id", async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const nome = String(req.body.nome || "").trim();
+    const descricao = String(req.body.descricao || "").trim();
+    const ativo = req.body.ativo !== false;
+    if (!nome) return res.status(400).json({ erro: "O nome do curso é obrigatório" });
+
+    await client.query("BEGIN");
+    const atual = await client.query("SELECT nome FROM cursos WHERE id=$1", [req.params.id]);
+    if (!atual.rows[0]) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ erro: "Curso não encontrado" });
+    }
+    await client.query("UPDATE users SET curso=$1 WHERE curso=$2", [nome, atual.rows[0].nome]);
+    await client.query("UPDATE recursos SET curso=$1 WHERE curso=$2", [nome, atual.rows[0].nome]);
+    const resultado = await client.query(
+      "UPDATE cursos SET nome=$1, descricao=$2, ativo=$3 WHERE id=$4 RETURNING *",
+      [nome, descricao, ativo, req.params.id]
+    );
+    await client.query("COMMIT");
+    res.json(resultado.rows[0]);
+  } catch (erro: any) {
+    await client.query("ROLLBACK");
+    res.status(erro?.code === "23505" ? 409 : 500).json({
+      erro: erro?.code === "23505" ? "Este curso já existe" : "Erro ao atualizar curso"
+    });
+  } finally {
+    client.release();
+  }
+});
+
+router.delete("/cursos/:id", async (req, res) => {
+  try {
+    const curso = await pool.query("SELECT nome FROM cursos WHERE id=$1", [req.params.id]);
+    if (!curso.rows[0]) return res.status(404).json({ erro: "Curso não encontrado" });
+    const uso = await pool.query(
+      "SELECT (SELECT COUNT(*) FROM users WHERE curso=$1) + (SELECT COUNT(*) FROM recursos WHERE curso=$1) AS total",
+      [curso.rows[0].nome]
+    );
+    if (Number(uso.rows[0].total) > 0) {
+      return res.status(409).json({ erro: "O curso possui utilizadores ou materiais. Desative-o em vez de eliminar." });
+    }
+    await pool.query("DELETE FROM cursos WHERE id=$1", [req.params.id]);
+    res.json({ sucesso: true });
+  } catch (erro) {
+    res.status(500).json({ erro: "Erro ao eliminar curso" });
+  }
+});
+
+router.get("/recursos/:id/comentarios", async (req, res) => {
+  try {
+    const resultado = await pool.query(`
+      SELECT c.id, c.texto, c.created_at, c.user_id, u.nome
+      FROM comentarios c JOIN users u ON u.id=c.user_id
+      WHERE c.recurso_id=$1 ORDER BY c.created_at ASC
+    `, [req.params.id]);
+    res.json(resultado.rows);
+  } catch (erro) {
+    res.status(500).json({ erro: "Erro ao buscar comentários" });
+  }
+});
+
+router.post("/recursos/:id/comentarios", async (req, res) => {
+  try {
+    const texto = String(req.body.texto || "").trim();
+    const userId = req.body.user_id;
+    if (!texto || texto.length > 1000 || !userId) {
+      return res.status(400).json({ erro: "Comentário inválido" });
+    }
+    const resultado = await pool.query(`
+      INSERT INTO comentarios(recurso_id, user_id, texto) VALUES($1,$2,$3)
+      RETURNING *
+    `, [req.params.id, userId, texto]);
+    res.status(201).json(resultado.rows[0]);
+  } catch (erro) {
+    res.status(500).json({ erro: "Erro ao publicar comentário" });
+  }
+});
+
+router.delete("/comentarios/:id", async (req, res) => {
+  try {
+    const { user_id, is_admin } = req.body;
+    const resultado = is_admin
+      ? await pool.query("DELETE FROM comentarios WHERE id=$1 RETURNING id", [req.params.id])
+      : await pool.query("DELETE FROM comentarios WHERE id=$1 AND user_id=$2 RETURNING id", [req.params.id, user_id]);
+    if (!resultado.rows[0]) return res.status(403).json({ erro: "Sem permissão para eliminar este comentário" });
+    res.json({ sucesso: true });
+  } catch (erro) {
+    res.status(500).json({ erro: "Erro ao eliminar comentário" });
+  }
+});
 
 router.put("/users/:id", async (req, res) => {
   try {

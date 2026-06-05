@@ -1,1068 +1,136 @@
-import {
-  useEffect,
-  useMemo,
-  useState
-} from "react";
-
-import {
-  useNavigate
-} from "react-router-dom";
-
-import {
-  Menu,
-  Search,
-  Star,
-  Download
-} from "lucide-react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, Download, GraduationCap, Menu, MessageCircle, Search, Send, Star, Trash2 } from "lucide-react";
+import API_URL from "../services/api";
+import MaterialPreview from "../components/MaterialPreview";
 
 interface Recurso {
-  id: number;
-  nome: string;
-  autor: string;
-  user_id: number;
-  disciplina: string;
-  descricao: string;
-  curso: string;
-  ficheiro: string;
-  visibilidade: string;
-  status: string;
-  created_at: string;
-  downloads: number;
+  id: number; nome: string; autor: string; user_id: number; disciplina: string; descricao: string;
+  curso: string; ficheiro: string | null; visibilidade: string; status: string; created_at: string; downloads: number;
 }
-
-
-
-import API_URL
-from "../services/api";
+interface Curso { id: number; nome: string; descricao: string; ativo: boolean; total_materiais: number; }
+interface Comentario { id: number; texto: string; created_at: string; user_id: number; nome: string; }
 
 function Instituicao() {
-
   const navigate = useNavigate();
-
-  const [recursos, setRecursos] =
-    useState<Recurso[]>([]);
-
-  const [pesquisa, setPesquisa] =
-    useState("");
-
-  const [
-    cursoSelecionado,
-    setCursoSelecionado
-  ] = useState("TODOS");
-
-  const [
-    abrirMenu,
-    setAbrirMenu
-  ] = useState(false);
-
-  const [
-    favoritos,
-    setFavoritos
-  ] = useState<number[]>([]);
-
-  const [
-    mensagem,
-    setMensagem
-  ] = useState("");
-
-  useEffect(() => {
-
-    carregarRecursos();
-
-    carregarFavoritos();
-
-  }, []);
-
-  function mostrarMensagem(
-    texto: string
-  ) {
-
-    setMensagem(texto);
-
-    setTimeout(() => {
-
-      setMensagem("");
-
-    }, 3000);
-
-  }
-
-  async function carregarRecursos() {
-
-    try {
-
-      const resposta = await fetch(
-        `${API_URL}/recursos`
-      );
-
-      const dados =
-        await resposta.json();
-
-      setRecursos(dados);
-
-    } catch (erro) {
-
-      console.log(erro);
-
-    }
-
-  }
-
-  async function carregarFavoritos() {
-
-    try {
-
-      const user = JSON.parse(
-        localStorage.getItem(
-          "user"
-        ) || "{}"
-      );
-
-      const resposta =
-        await fetch(
-          `${API_URL}/favoritos/${user.id}`
-        );
-
-      const dados =
-        await resposta.json();
-
-      setFavoritos(
-
-        dados.map(
-          (item: any) =>
-            item.recurso_id
-        )
-
-      );
-
-    } catch (erro) {
-
-      console.log(erro);
-
-    }
-
-  }
-
-  async function toggleFavorito(
-    recursoId: number
-  ) {
-
-    try {
-
-      const user = JSON.parse(
-        localStorage.getItem(
-          "user"
-        ) || "{}"
-      );
-
-      const resposta =
-        await fetch(
-          `${API_URL}/favoritos`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            body: JSON.stringify({
-              user_id: user.id,
-              recurso_id:
-                recursoId
-            })
-          }
-        );
-
-      const dados =
-        await resposta.json();
-
-      if (
-        dados.favorito
-      ) {
-
-        setFavoritos([
-          ...favoritos,
-          recursoId
-        ]);
-
-        mostrarMensagem(
-          "Adicionado aos favoritos"
-        );
-
-      } else {
-
-        setFavoritos(
-
-          favoritos.filter(
-            (id) =>
-              id !== recursoId
-          )
-
-        );
-
-        mostrarMensagem(
-          "Removido dos favoritos"
-        );
-
-      }
-
-    } catch (erro) {
-
-      console.log(erro);
-
-    }
-
-  }
-
-  function obterIconeArquivo(
-  arquivo?: string | null
-) {
-
-  if (!arquivo)
-    return "📁";
-
-  const extensao =
-    arquivo
-      .toLowerCase()
-      .split(".")
-      .pop();
-
-  switch (extensao) {
-
-    case "pdf":
-      return "📕";
-
-    case "doc":
-    case "docx":
-      return "📘";
-
-    case "ppt":
-    case "pptx":
-      return "📙";
-
-    case "xls":
-    case "xlsx":
-      return "📗";
-
-    case "jpg":
-    case "jpeg":
-    case "png":
-      return "🖼️";
-
-    case "zip":
-    case "rar":
-      return "📦";
-
-    default:
-      return "📄";
-
-  }
-
-}
-
-  const materiaisPublicos =
-    useMemo(() => {
-
-      return recursos
-
-        .filter(
-          (recurso) =>
-            recurso.visibilidade ===
-            "PUBLICO"
-        )
-
-        .filter(
-          (recurso) =>
-            (
-              recurso.status ||
-              "DISPONIVEL"
-            ) ===
-            "DISPONIVEL"
-        )
-
-        .filter((recurso) => {
-
-          if (
-            cursoSelecionado ===
-            "TODOS"
-          ) {
-            return true;
-          }
-
-          return (
-            recurso.curso ===
-            cursoSelecionado
-          );
-
-        })
-
-        .filter((recurso) => {
-
-          const texto =
-            `
-            ${recurso.nome}
-            ${recurso.descricao}
-            ${recurso.disciplina}
-            ${recurso.autor}
-            ${recurso.curso}
-            `
-              .toLowerCase();
-
-          return texto.includes(
-            pesquisa.toLowerCase()
-          );
-
-        });
-
-    }, [
-      recursos,
-      pesquisa,
-      cursoSelecionado
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [recursos, setRecursos] = useState<Recurso[]>([]);
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [favoritos, setFavoritos] = useState<number[]>([]);
+  const [comentarios, setComentarios] = useState<Record<number, Comentario[]>>({});
+  const [comentariosAbertos, setComentariosAbertos] = useState<number[]>([]);
+  const [novoComentario, setNovoComentario] = useState<Record<number, string>>({});
+  const [pesquisa, setPesquisa] = useState("");
+  const [cursoSelecionado, setCursoSelecionado] = useState("TODOS");
+  const [abrirMenu, setAbrirMenu] = useState(false);
+  const [mensagem, setMensagem] = useState("");
+
+  useEffect(() => { carregarTudo(); }, []);
+
+  async function carregarTudo() {
+    const [recursosRes, cursosRes, favoritosRes] = await Promise.all([
+      fetch(`${API_URL}/recursos`), fetch(`${API_URL}/cursos`), fetch(`${API_URL}/favoritos/${user.id}`)
     ]);
-
-  const cursos =
-    [...new Set(
-
-      recursos
-        .filter(
-          (recurso) =>
-            recurso.curso &&
-            recurso.curso.trim() !==
-            ""
-        )
-        .map(
-          (recurso) =>
-            recurso.curso
-        )
-
-    )];
-
-    async function baixarArquivo(
-  recurso: Recurso
-) {
-
-  try {
-
-    await fetch(
-      `${API_URL}/recursos/${recurso.id}/download`,
-      {
-        method: "PUT"
-      }
-    );
-
-    window.open(
-      `${API_URL}/uploads/${recurso.ficheiro}`,
-      "_blank"
-    );
-
-    carregarRecursos();
-
-  } catch (erro) {
-
-    console.log(erro);
-
+    if (recursosRes.ok) setRecursos(await recursosRes.json());
+    if (cursosRes.ok) setCursos((await cursosRes.json()).filter((curso: Curso) => curso.ativo));
+    if (favoritosRes.ok) setFavoritos((await favoritosRes.json()).map((item: { recurso_id: number }) => item.recurso_id));
   }
 
-}
+  function avisar(texto: string) { setMensagem(texto); setTimeout(() => setMensagem(""), 3000); }
 
-  return (
-
-    <div className="min-h-screen bg-slate-100">
-
-      <header className="bg-blue-600 shadow-lg sticky top-0 z-50">
-
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-
-          <div className="flex items-center gap-4 relative">
-
-            <button
-              onClick={() =>
-                setAbrirMenu(
-                  !abrirMenu
-                )
-              }
-              className="text-white hover:bg-blue-700 p-3 rounded-xl transition"
-            >
-
-              <Menu size={28} />
-
-            </button>
-
-            {abrirMenu && (
-
-              <div className="absolute top-16 left-0 bg-white shadow-2xl border border-gray-200 rounded-2xl w-64 overflow-hidden z-50">
-
-                <button
-                  onClick={() => {
-
-                    navigate(
-                      "/home"
-                    );
-
-                    setAbrirMenu(
-                      false
-                    );
-
-                  }}
-                  className="w-full text-left px-5 py-4 hover:bg-slate-100 transition border-b border-gray-100"
-                >
-
-                  Meu Perfil
-
-                </button>
-
-                <button
-                  onClick={() => {
-
-                    navigate(
-                      "/favoritos"
-                    );
-
-                    setAbrirMenu(
-                      false
-                    );
-
-                  }}
-                  className="w-full text-left px-5 py-4 hover:bg-slate-100 transition border-b border-gray-100"
-                >
-
-                  Meus Favoritos
-
-                </button>
-
-                <button
-                  onClick={() => {
-
-                    localStorage.removeItem(
-                      "user"
-                    );
-
-                    navigate("/");
-
-                  }}
-                  className="w-full text-left px-5 py-4 hover:bg-red-50 text-red-500 transition"
-                >
-
-                  Logout
-
-                </button>
-
-              </div>
-
-            )}
-
-            <div className="flex items-center gap-4">
-
-  <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-lg">
-
-    <img
-      src="/logo.jpg"
-      alt="Logo"
-      className="w-full h-full object-cover"
-    />
-
-  </div>
-
-  <div>
-
-    <h1 className="text-3xl font-bold text-white tracking-tight">
-
-      EduShare
-
-    </h1>
-
-    <p className="text-blue-100 text-sm">
-
-      Biblioteca Académica
-
-    </p>
-            <p className="text-blue-100 text-sm">
-
-  Bem-vindo,
-  {
-    JSON.parse(
-      localStorage.getItem(
-        "user"
-      ) || "{}"
-    ).nome
+  async function toggleFavorito(recurso: Recurso) {
+    if (String(recurso.user_id) === String(user.id)) return avisar("O seu próprio material não pode ser favoritado.");
+    const resposta = await fetch(`${API_URL}/favoritos`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id, recurso_id: recurso.id })
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) return avisar(dados.erro);
+    setFavoritos((atuais) => dados.favorito ? [...atuais, recurso.id] : atuais.filter((id) => id !== recurso.id));
   }
 
-</p>
-  </div>
+  async function baixar(recurso: Recurso) {
+    await fetch(`${API_URL}/recursos/${recurso.id}/download`, { method: "PUT" });
+    window.open(`${API_URL}/uploads/${recurso.ficheiro}`, "_blank");
+    carregarTudo();
+  }
 
-</div>
+  async function abrirComentarios(recursoId: number) {
+    if (comentariosAbertos.includes(recursoId)) {
+      setComentariosAbertos((atuais) => atuais.filter((id) => id !== recursoId));
+      return;
+    }
+    const resposta = await fetch(`${API_URL}/recursos/${recursoId}/comentarios`);
+    if (resposta.ok) {
+      const dados = await resposta.json();
+      setComentarios((atuais) => ({ ...atuais, [recursoId]: dados }));
+    }
+    setComentariosAbertos((atuais) => [...atuais, recursoId]);
+  }
 
-          </div>
+  async function comentar(evento: FormEvent, recursoId: number) {
+    evento.preventDefault();
+    const texto = novoComentario[recursoId]?.trim();
+    if (!texto) return;
+    const resposta = await fetch(`${API_URL}/recursos/${recursoId}/comentarios`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id, texto })
+    });
+    if (resposta.ok) {
+      setNovoComentario((atuais) => ({ ...atuais, [recursoId]: "" }));
+      const lista = await fetch(`${API_URL}/recursos/${recursoId}/comentarios`);
+      const dados = await lista.json();
+      setComentarios((atuais) => ({ ...atuais, [recursoId]: dados }));
+    }
+  }
 
-        </div>
+  async function eliminarComentario(recursoId: number, comentarioId: number) {
+    const resposta = await fetch(`${API_URL}/comentarios/${comentarioId}`, {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id, is_admin: user.role === "ADMIN" })
+    });
+    if (resposta.ok) setComentarios((atuais) => ({ ...atuais, [recursoId]: atuais[recursoId].filter((c) => c.id !== comentarioId) }));
+  }
 
-      </header>
+  const materiais = useMemo(() => recursos.filter((recurso) =>
+    recurso.visibilidade === "PUBLICO" && (recurso.status || "DISPONIVEL") === "DISPONIVEL" &&
+    (cursoSelecionado === "TODOS" || recurso.curso === cursoSelecionado) &&
+    `${recurso.nome} ${recurso.descricao} ${recurso.disciplina} ${recurso.autor} ${recurso.curso}`.toLowerCase().includes(pesquisa.toLowerCase())
+  ), [recursos, pesquisa, cursoSelecionado]);
 
-      {mensagem && (
-
-        <div className="fixed top-5 right-5 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50">
-
-          {mensagem}
-
-        </div>
-
-      )}
-
-      <main className="max-w-7xl mx-auto p-6">
-
-        <section className="relative overflow-hidden rounded-[40px] shadow-2xl mb-10 h-130 border border-white/10">
-
-  <img
-    src="/instituicao.jpg"
-    alt="Instituição"
-    className="absolute inset-0 w-full h-full object-cover scale-105 blur-[2px]"
-  />
-
-  <div className="absolute inset-0 bg-black/60" />
-
-  <div className="absolute inset-0 bg-linear-to-r from-slate-950/80 via-slate-900/50 to-slate-900/30" />
-
-  <div className="relative z-10 h-full flex flex-col justify-between p-14 text-white">
-
-    <div className="flex justify-between items-start flex-wrap gap-5">
-
-      <div className="bg-white/10 backdrop-blur-md border border-white/10 px-6 py-3 rounded-2xl">
-
-        <span className="text-sm tracking-[0.25em] uppercase text-gray-200 font-medium">
-
-          Biblioteca Académica
-
-        </span>
-
+  return <div className="min-h-screen bg-slate-100">
+    <header className="bg-slate-950 text-white sticky top-0 z-40 shadow-xl">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4 relative">
+        <button onClick={() => setAbrirMenu(!abrirMenu)} className="p-3 bg-white/10 rounded-xl"><Menu /></button>
+        {abrirMenu && <div className="absolute top-18 left-6 bg-white text-slate-800 rounded-2xl shadow-2xl overflow-hidden w-56"><button onClick={() => navigate("/home")} className="w-full text-left p-4 hover:bg-slate-100">Meu perfil</button><button onClick={() => navigate("/favoritos")} className="w-full text-left p-4 hover:bg-slate-100">Meus favoritos</button><button onClick={() => { localStorage.clear(); navigate("/"); }} className="w-full text-left p-4 text-red-600 hover:bg-red-50">Sair</button></div>}
+        <div><h1 className="text-2xl font-bold">EduShare Comunidade</h1><p className="text-slate-400 text-sm">Conhecimento partilhado por toda a instituição</p></div>
       </div>
-
-      <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-3 rounded-2xl">
-
-        <span className="text-sm text-gray-100">
-
-          Plataforma institucional colaborativa
-
-        </span>
-
-      </div>
-
-    </div>
-
-    <div>
-
-      <h2 className="text-6xl font-black leading-tight tracking-tight max-w-4xl">
-
-        Conhecimento partilhado
-        para toda a comunidade académica.
-
-      </h2>
-
-      <p className="mt-8 text-xl text-gray-200 leading-relaxed max-w-3xl">
-
-        Explore livros, relatórios, apresentações,
-        testes, exercícios resolvidos e diversos
-        materiais académicos disponibilizados
-        por estudantes e docentes da instituição.
-
-      </p>
-
-      <div className="mt-12 flex flex-wrap gap-8 text-gray-200">
-
-        <div className="border-l border-white/20 pl-5">
-
-          <p className="text-sm uppercase tracking-widest text-gray-300">
-
-            Materiais disponíveis
-
-          </p>
-
-          <span className="text-lg font-semibold">
-
-            {
-              materiaisPublicos.length
-            }
-            {" "}
-            recursos publicados
-
-          </span>
-
-        </div>
-
-        <div className="border-l border-white/20 pl-5">
-
-          <p className="text-sm uppercase tracking-widest text-gray-300">
-
-            Cursos académicos
-
-          </p>
-
-          <span className="text-lg font-semibold">
-
-            {cursos.length}
-            {" "}
-            áreas disponíveis
-
-          </span>
-
-        </div>
-
-        <div className="border-l border-white/20 pl-5">
-
-          <p className="text-sm uppercase tracking-widest text-gray-300">
-
-            Disponibilidade
-
-          </p>
-
-          <span className="text-lg font-semibold">
-
-            Acesso contínuo à plataforma
-
-          </span>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-<section className="grid md:grid-cols-4 gap-5 mb-10">
-
-  <div className="bg-white p-6 rounded-3xl shadow-md">
-    <p className="text-gray-500">
-      Recursos
-    </p>
-
-    <h2 className="text-4xl font-bold text-blue-600">
-
-      {materiaisPublicos.length}
-
-    </h2>
-  </div>
-
-  <div className="bg-white p-6 rounded-3xl shadow-md">
-    <p className="text-gray-500">
-      Cursos
-    </p>
-
-    <h2 className="text-4xl font-bold text-green-600">
-
-      {cursos.length}
-
-    </h2>
-  </div>
-
-  <div className="bg-white p-6 rounded-3xl shadow-md">
-    <p className="text-gray-500">
-      Favoritos
-    </p>
-
-    <h2 className="text-4xl font-bold text-yellow-600">
-
-      {favoritos.length}
-
-    </h2>
-  </div>
-
-  <div className="bg-white p-6 rounded-3xl shadow-md">
-    <p className="text-gray-500">
-      PDFs
-    </p>
-
-    <h2 className="text-4xl font-bold text-red-600">
-
-      {
-        materiaisPublicos.filter(
-          r =>
-            r.ficheiro?.includes(".pdf")
-        ).length
-      }
-
-    </h2>
-  </div>
-
-</section>
-        <section className="bg-white rounded-3xl shadow-lg p-6 mb-10">
-
-          <div className="grid md:grid-cols-2 gap-4">
-
-            <div className="relative">
-
-              <Search
-                className="absolute left-4 top-4 text-gray-400"
-                size={20}
-              />
-
-              <input
-                type="text"
-                placeholder="Pesquisar materiais..."
-                className="w-full border border-gray-200 rounded-2xl pl-12 pr-4 py-4 outline-none focus:border-blue-500"
-                value={pesquisa}
-                onChange={(e) =>
-                  setPesquisa(
-                    e.target.value
-                  )
-                }
-              />
-
-            </div>
-
-            <select
-              className="border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:border-blue-500"
-              value={
-                cursoSelecionado
-              }
-              onChange={(e) =>
-                setCursoSelecionado(
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="TODOS">
-
-                Todos os cursos
-
-              </option>
-
-              {cursos.map(
-                (curso) => (
-
-                  <option
-                    key={curso}
-                    value={curso}
-                  >
-
-                    {curso}
-
-                  </option>
-
-                )
-              )}
-
-            </select>
-
-          </div>
-
-        </section>
-
-        <section>
-
-          <div className="flex justify-between items-center mb-8">
-
-            <div>
-
-              <h2 className="text-3xl font-bold text-gray-800">
-
-                Materiais Disponíveis
-
-              </h2>
-
-              <p className="text-gray-500 mt-1">
-
-                {
-                  materiaisPublicos.length
-                }
-                {" "}
-                materiais encontrados
-
-              </p>
-
-            </div>
-
-          </div>
-          {
-  materiaisPublicos.length === 0 && (
-
-    <div className="bg-white rounded-3xl p-12 text-center">
-
-      <h3 className="text-2xl font-bold">
-
-        Nenhum material encontrado
-
-      </h3>
-
-      <p className="text-gray-500 mt-3">
-
-        Tente alterar os filtros
-        ou a pesquisa.
-
-      </p>
-
-    </div>
-
-  )
-}
-
-          <div className="grid gap-6">
-
-            {materiaisPublicos.map(
-              (recurso) => (
-
-                <div
-                key={recurso.id}
-                className="
-                bg-white
-                rounded-4xl
-                p-8
-                shadow-lg
-                hover:shadow-2xl
-                hover:-translate-y-2
-                transition-all
-                duration-300
-                border
-                border-slate-100
-              "
-              >
-
-                  <div className="flex justify-between items-start gap-6 flex-wrap">
-
-                    <div className="flex gap-5">
-<div
-  className="
-  w-28
-  h-36
-  rounded-2xl
-  bg-linear-to-br
-  from-blue-500
-  to-blue-700
-  flex
-  items-center
-  justify-center
-  text-5xl
-  shadow-lg
-shrink-0
-"
->
-  {obterIconeArquivo(
-    recurso.ficheiro
-  )}
-</div>
-                      
-
-                      <div>
-
-                        <h3 className="
-                        text-3xl
-                        font-extrabold
-                        text-gray-800
-                        tracking-tight
-                        ">
-
-                          {
-                            recurso.nome
-                          }
-
-                        </h3>
-
-                        <p className="text-blue-600 font-medium mt-1">
-
-                          {
-                            recurso.disciplina
-                          }
-
-                        </p>
-
-                        <p className="text-gray-500 mt-3 leading-relaxed max-w-2xl">
-
-                          {
-                            recurso.descricao
-                          }
-
-                        </p>
-                        <p className="text-sm text-gray-400 mt-2">
-                          Publicado em {
-                            new Date(
-                              (recurso as any).created_at
-                            ).toLocaleDateString("pt-PT")
-                          }
-                        </p>
-                          <p className="text-sm text-gray-400">
-
-                            ⬇️ {recurso.downloads || 0}
-                            downloads
-
-                          </p>
-                        <div className="flex gap-3 mt-4 flex-wrap">
-
-                          <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm">
-
-                            {
-                              recurso.curso
-                            }
-
-                          </span>
-
-                          <span className="bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-sm">
-
-                            {
-                              recurso.autor
-                            }
-
-                          </span>
-                          {
-                            favoritos.includes(recurso.id) && (
-
-                              <span className="
-                                bg-yellow-100
-                                text-yellow-700
-                                px-4
-                                py-2
-                                rounded-full
-                                text-sm
-                              ">
-                                ⭐ Favorito
-                              </span>
-
-                            )
-                          }
-                            <span
-                              className="
-                                bg-green-100
-                                text-green-700
-                                px-4
-                                py-2
-                                rounded-full
-                                text-sm
-                              "
-                            >
-                              {recurso.status}
-                            </span>
-                            <span
-                              className={
-                                recurso.visibilidade === "PUBLICO"
-                                  ? "bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm"
-                                  : "bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm"
-                              }
-                            >
-                              {recurso.visibilidade}
-                            </span>
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    <div className="
-                    flex
-                    flex-col
-                    items-end
-                    justify-between
-                    gap-4
-                    min-w-45
-                    ">
-
-                    {
-
-                        recurso.user_id !==
-                        JSON.parse(
-                        localStorage.getItem(
-                            "user"
-                        ) || "{}"
-                        ).id
-
-                        ? (
-
-                        <>
-
-                            <button
-
-                            onClick={() =>
-                                toggleFavorito(
-                                recurso.id
-                                )
-                            }
-
-                            className={`
-                                p-3 rounded-xl transition
-
-                                ${
-                                favoritos.includes(
-                                    recurso.id
-                                )
-                                    ? "bg-yellow-100 text-yellow-600"
-                                    : "bg-gray-100 text-gray-600 hover:bg-yellow-50"
-                                }
-                            `}
-                            >
-
-                            <Star
-                                size={18}
-                                fill={
-                                favoritos.includes(
-                                    recurso.id
-                                )
-                                    ? "currentColor"
-                                    : "none"
-                                }
-                            />
-
-                            </button>
-                            <>
-
-                          <button
-                            onClick={() =>
-                              baixarArquivo(recurso)
-                            }
-                            className="
-                            bg-blue-600
-                            hover:bg-blue-700
-                            text-white
-                            px-6
-                            py-3
-                            rounded-2xl
-                            flex
-                            items-center
-                            gap-2
-                            transition
-                            shadow-md
-                            "
-                          >
-                            <Download size={18} />
-
-                            Baixar
-                          </button>
-                        </>
-
-                        </>
-
-                        )
-
-                        : (
-
-                        <div className="bg-blue-50 text-blue-700 px-5 py-3 rounded-2xl text-sm font-medium">
-
-                            Publicado por você
-
-                        </div>
-
-                        )
-
-                    }
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              )
-            )}
-
-          </div>
-
-        </section>
-
-      </main>
-
-    </div>
-
-  );
-
+    </header>
+    {mensagem && <div className="fixed top-5 right-5 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50">{mensagem}</div>}
+
+    <main className="max-w-7xl mx-auto p-6">
+      <section className="bg-linear-to-br from-blue-700 to-slate-950 text-white rounded-[36px] p-9 md:p-12 mt-4">
+        <p className="text-blue-200 uppercase tracking-[0.25em] text-sm">Biblioteca académica</p>
+        <h2 className="text-4xl md:text-6xl font-black max-w-4xl mt-5">Materiais, ideias e experiências num só lugar.</h2>
+        <div className="grid sm:grid-cols-3 gap-4 mt-10"><div className="bg-white/10 p-5 rounded-2xl"><strong className="text-3xl">{materiais.length}</strong><p className="text-blue-200">materiais disponíveis</p></div><div className="bg-white/10 p-5 rounded-2xl"><strong className="text-3xl">{cursos.length}</strong><p className="text-blue-200">cursos ativos</p></div><div className="bg-white/10 p-5 rounded-2xl"><strong className="text-3xl">{favoritos.length}</strong><p className="text-blue-200">favoritos</p></div></div>
+      </section>
+
+      <section className="mt-10"><div className="flex items-end justify-between mb-5"><div><h2 className="text-3xl font-bold">Cursos da comunidade</h2><p className="text-slate-500 mt-1">Criados e organizados pela administração.</p></div></div><div className="grid md:grid-cols-3 gap-4">{cursos.map((curso) => <button key={curso.id} onClick={() => setCursoSelecionado(curso.nome)} className="text-left bg-white border border-slate-200 p-6 rounded-3xl hover:border-blue-400 hover:shadow-lg transition"><GraduationCap className="text-blue-600" /><h3 className="font-bold text-xl mt-4">{curso.nome}</h3><p className="text-slate-500 mt-2 min-h-12">{curso.descricao || "Materiais académicos deste curso."}</p><span className="inline-block mt-4 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">{curso.total_materiais} materiais</span></button>)}</div></section>
+
+      <section className="bg-white border border-slate-200 rounded-3xl p-5 my-10 grid md:grid-cols-2 gap-4"><div className="relative"><Search className="absolute left-4 top-4 text-slate-400" size={20} /><input value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} placeholder="Pesquisar materiais..." className="w-full border border-slate-200 rounded-2xl p-4 pl-12" /></div><select value={cursoSelecionado} onChange={(e) => setCursoSelecionado(e.target.value)} className="border border-slate-200 rounded-2xl p-4 bg-white"><option value="TODOS">Todos os cursos</option>{cursos.map((curso) => <option key={curso.id}>{curso.nome}</option>)}</select></section>
+
+      <section><div className="mb-6"><h2 className="text-3xl font-bold">Materiais disponíveis</h2><p className="text-slate-500">{materiais.length} resultados encontrados</p></div><div className="grid lg:grid-cols-2 gap-6">
+        {materiais.map((recurso) => <article key={recurso.id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+          <MaterialPreview ficheiro={recurso.ficheiro} nome={recurso.nome} />
+          <div className="mt-5"><div className="flex justify-between gap-4"><div><h3 className="text-2xl font-bold">{recurso.nome}</h3><p className="text-blue-600 font-medium">{recurso.disciplina} · {recurso.curso}</p></div>{String(recurso.user_id) !== String(user.id) && <button onClick={() => toggleFavorito(recurso)} className={`p-3 rounded-xl h-fit ${favoritos.includes(recurso.id) ? "bg-yellow-100 text-yellow-600" : "bg-slate-100 text-slate-500"}`}><Star fill={favoritos.includes(recurso.id) ? "currentColor" : "none"} size={20} /></button>}</div>
+          <p className="text-slate-500 mt-4">{recurso.descricao}</p><p className="text-sm text-slate-400 mt-3">Por {recurso.autor} · {recurso.downloads || 0} downloads</p>
+          <div className="flex gap-3 mt-5"><button onClick={() => baixar(recurso)} className="flex-1 bg-blue-600 text-white p-3 rounded-xl flex items-center justify-center gap-2"><Download size={18} /> Baixar</button><button onClick={() => abrirComentarios(recurso.id)} className="flex-1 bg-slate-100 text-slate-700 p-3 rounded-xl flex items-center justify-center gap-2"><MessageCircle size={18} /> Comentários</button></div></div>
+          {comentariosAbertos.includes(recurso.id) && <div className="border-t border-slate-200 mt-6 pt-5"><div className="grid gap-3 max-h-64 overflow-auto">{(comentarios[recurso.id] || []).map((comentario) => <div key={comentario.id} className="bg-slate-50 p-4 rounded-2xl flex justify-between gap-3"><div><p className="font-semibold">{comentario.nome}</p><p className="text-slate-600 mt-1">{comentario.texto}</p></div>{(comentario.user_id === user.id || user.role === "ADMIN") && <button onClick={() => eliminarComentario(recurso.id, comentario.id)} className="text-red-500 h-fit"><Trash2 size={16} /></button>}</div>)}</div><form onSubmit={(e) => comentar(e, recurso.id)} className="flex gap-2 mt-4"><input maxLength={1000} value={novoComentario[recurso.id] || ""} onChange={(e) => setNovoComentario((atuais) => ({ ...atuais, [recurso.id]: e.target.value }))} placeholder="Deixe um comentário..." className="flex-1 border border-slate-200 p-3 rounded-xl" /><button className="bg-blue-600 text-white p-3 rounded-xl"><Send size={18} /></button></form></div>}
+        </article>)}
+        {materiais.length === 0 && <div className="lg:col-span-2 bg-white rounded-3xl p-12 text-center"><BookOpen className="mx-auto text-slate-400" size={42} /><h3 className="text-2xl font-bold mt-4">Nenhum material encontrado</h3></div>}
+      </div></section>
+    </main>
+  </div>;
 }
 
 export default Instituicao;

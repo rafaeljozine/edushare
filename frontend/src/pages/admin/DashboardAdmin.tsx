@@ -1,401 +1,44 @@
-import {
-  useEffect,
-  useState
-} from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, FolderOpen, GraduationCap, LogOut, Shield, Users } from "lucide-react";
+import API_URL from "../../services/api";
 
-import {
-  useNavigate
-} from "react-router-dom";
-import API_URL
-from "../../services/api";
-
-import {
-  Users,
-  BookOpen,
-  Shield,
-  FolderOpen
-} from "lucide-react";
-
-
+interface User { role: string; status: string; }
+interface Recurso { visibilidade: string; status: string; }
+interface Curso { ativo: boolean; }
 
 function DashboardAdmin() {
-
   const navigate = useNavigate();
-
-  const [
-    totalUsers,
-    setTotalUsers
-  ] = useState(0);
-
-  const [
-    totalMateriais,
-    setTotalMateriais
-  ] = useState(0);
-
-  const [
-    totalAdmins,
-    setTotalAdmins
-  ] = useState(0);
-
-  const [
-    materiaisPublicos,
-    setMateriaisPublicos
-  ] = useState(0);
-
-  const [
-    cursos,
-    setCursos
-  ] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [recursos, setRecursos] = useState<Recurso[]>([]);
+  const [cursos, setCursos] = useState<Curso[]>([]);
 
   useEffect(() => {
-
-    carregarDados();
-
+    Promise.all([fetch(`${API_URL}/users`), fetch(`${API_URL}/recursos`), fetch(`${API_URL}/cursos`)])
+      .then(async ([u, r, c]) => { setUsers(await u.json()); setRecursos(await r.json()); setCursos(await c.json()); });
   }, []);
 
-  async function carregarDados() {
-
-    try {
-
-      const users =
-        await fetch(
-          `${API_URL}/users`
-        );
-
-      const usersData =
-        await users.json();
-
-      setTotalUsers(
-        usersData.length
-      );
-
-      const admins =
-        usersData.filter(
-          (user: any) =>
-            user.role ===
-            "ADMIN"
-        );
-
-      setTotalAdmins(
-        admins.length
-      );
-
-      const materiais =
-        await fetch(
-          `${API_URL}/recursos`
-        );
-
-      const materiaisData =
-        await materiais.json();
-
-      setTotalMateriais(
-        materiaisData.length
-      );
-
-      const publicos =
-        materiaisData.filter(
-          (item: any) =>
-            item.visibilidade ===
-            "PUBLICO"
-        );
-
-      setMateriaisPublicos(
-        publicos.length
-      );
-
-      const cursosMap =
-        materiaisData.reduce(
-          (
-            acc: any,
-            item: any
-          ) => {
-
-            acc[item.curso] =
-              (
-                acc[item.curso] || 0
-              ) + 1;
-
-            return acc;
-
-          },
-          {}
-        );
-
-      setCursos(
-        Object.entries(
-          cursosMap
-        )
-      );
-
-    } catch (erro) {
-
-      console.log(erro);
-
-    }
-
-  }
-
-  return (
-
-    <div className="min-h-screen bg-slate-100">
-
-      <header className="bg-blue-600 text-white px-8 py-5 shadow-lg">
-
-        <div className="flex justify-between items-center">
-
-          <div>
-
-            <h1 className="text-4xl font-bold">
-
-              Painel Administrativo
-
-            </h1>
-
-            <p className="text-blue-100 mt-2">
-
-              Gestão da plataforma EduShare
-
-            </p>
-
-          </div>
-
-          <button
-            onClick={() => {
-
-              localStorage.clear();
-
-              navigate("/");
-
-            }}
-            className="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-2xl transition"
-          >
-
-            Logout
-
-          </button>
-
-        </div>
-
-      </header>
-
-      <main className="max-w-7xl mx-auto p-8">
-
-        <div className="grid md:grid-cols-4 gap-6">
-
-          <div className="bg-white p-8 rounded-3xl shadow-md hover:shadow-xl transition">
-
-            <Users
-              size={40}
-              className="text-blue-600"
-            />
-
-            <p className="text-gray-500 mt-5">
-
-              Utilizadores
-
-            </p>
-
-            <h2 className="text-5xl font-bold mt-2 text-gray-800">
-
-              {totalUsers}
-
-            </h2>
-
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-md hover:shadow-xl transition">
-
-            <BookOpen
-              size={40}
-              className="text-green-600"
-            />
-
-            <p className="text-gray-500 mt-5">
-
-              Materiais
-
-            </p>
-
-            <h2 className="text-5xl font-bold mt-2 text-gray-800">
-
-              {totalMateriais}
-
-            </h2>
-
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-md hover:shadow-xl transition">
-
-            <Shield
-              size={40}
-              className="text-purple-600"
-            />
-
-            <p className="text-gray-500 mt-5">
-
-              Administradores
-
-            </p>
-
-            <h2 className="text-5xl font-bold mt-2 text-gray-800">
-
-              {totalAdmins}
-
-            </h2>
-
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-md hover:shadow-xl transition">
-
-            <BookOpen
-              size={40}
-              className="text-orange-500"
-            />
-
-            <p className="text-gray-500 mt-5">
-
-              Materiais Públicos
-
-            </p>
-
-            <h2 className="text-5xl font-bold mt-2 text-gray-800">
-
-              {materiaisPublicos}
-
-            </h2>
-
-          </div>
-
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 mt-10">
-
-          <button
-            onClick={() =>
-              navigate(
-                "/admin/usuarios"
-              )
-            }
-            className="bg-white rounded-3xl p-8 shadow-md text-left hover:shadow-xl transition"
-          >
-
-            <Users
-              size={50}
-              className="text-blue-600"
-            />
-
-            <h2 className="text-3xl font-bold mt-6 text-gray-800">
-
-              Utilizadores
-
-            </h2>
-
-            <p className="text-gray-500 mt-3">
-
-              Gerir contas da plataforma.
-
-            </p>
-
-          </button>
-
-          <button
-            onClick={() =>
-              navigate(
-                "/admin/materiais"
-              )
-            }
-            className="bg-white rounded-3xl p-8 shadow-md text-left hover:shadow-xl transition"
-          >
-
-            <FolderOpen
-              size={50}
-              className="text-green-600"
-            />
-
-            <h2 className="text-3xl font-bold mt-6 text-gray-800">
-
-              Materiais
-
-            </h2>
-
-            <p className="text-gray-500 mt-3">
-
-              Gerir materiais publicados.
-
-            </p>
-
-          </button>
-
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-md p-8 mt-10">
-
-          <div className="flex justify-between items-center mb-8">
-
-            <div>
-
-              <h2 className="text-3xl font-bold text-gray-800">
-
-                Cursos Mais Ativos
-
-              </h2>
-
-              <p className="text-gray-500 mt-2">
-
-                Cursos com maior quantidade de materiais publicados.
-
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="grid gap-5">
-
-            {cursos.map(
-              (
-                curso: any,
-                index
-              ) => (
-
-                <div
-                  key={index}
-                  className="flex justify-between items-center bg-slate-50 rounded-2xl p-5 hover:bg-slate-100 transition"
-                >
-
-                  <div>
-
-                    <h3 className="text-xl font-semibold text-gray-800">
-
-                      {curso[0]}
-
-                    </h3>
-
-                  </div>
-
-                  <span className="bg-blue-600 text-white px-5 py-2 rounded-xl font-medium">
-
-                    {curso[1]}
-                    {" "}
-                    materiais
-
-                  </span>
-
-                </div>
-
-              )
-            )}
-
-          </div>
-
-        </div>
-
-      </main>
-
-    </div>
-
-  );
-
+  const cards = [
+    ["Utilizadores", users.length, Users, "text-blue-600"],
+    ["Materiais", recursos.length, BookOpen, "text-green-600"],
+    ["Administradores", users.filter((u) => u.role === "ADMIN").length, Shield, "text-purple-600"],
+    ["Cursos ativos", cursos.filter((c) => c.ativo).length, GraduationCap, "text-orange-600"]
+  ] as const;
+
+  const areas = [
+    ["Utilizadores", "Gerir contas, acessos, bloqueios e administradores.", Users, "/admin/usuarios", "bg-blue-600"],
+    ["Materiais", "Moderar, editar, ocultar e eliminar conteúdos.", FolderOpen, "/admin/materiais", "bg-green-600"],
+    ["Cursos", "Adicionar os cursos visíveis na comunidade e nos cadastros.", GraduationCap, "/admin/cursos", "bg-purple-600"]
+  ] as const;
+
+  return <div className="min-h-screen bg-slate-100">
+    <header className="bg-slate-950 text-white px-6 py-7"><div className="max-w-7xl mx-auto flex justify-between items-center"><div><p className="text-blue-400 font-semibold">EduShare</p><h1 className="text-4xl font-black mt-1">Administração</h1><p className="text-slate-400 mt-2">Controlo central da plataforma</p></div><button onClick={() => { localStorage.clear(); navigate("/"); }} className="bg-white/10 hover:bg-red-600 p-4 rounded-2xl flex items-center gap-2"><LogOut size={19} /> Sair</button></div></header>
+    <main className="max-w-7xl mx-auto p-6">
+      <section className="grid md:grid-cols-4 gap-5 mt-5">{cards.map(([nome, valor, Icone, cor]) => <div key={nome} className="bg-white border border-slate-200 p-6 rounded-3xl"><Icone className={cor} /><p className="text-slate-500 mt-4">{nome}</p><strong className="text-4xl">{valor}</strong></div>)}</section>
+      <section className="grid md:grid-cols-3 gap-6 mt-10">{areas.map(([nome, texto, Icone, rota, cor]) => <button key={nome} onClick={() => navigate(rota)} className="bg-white border border-slate-200 p-7 rounded-3xl text-left hover:shadow-xl hover:-translate-y-1 transition"><div className={`${cor} text-white w-14 h-14 rounded-2xl flex items-center justify-center`}><Icone /></div><h2 className="text-2xl font-bold mt-6">{nome}</h2><p className="text-slate-500 mt-2">{texto}</p></button>)}</section>
+      <section className="bg-white border border-slate-200 rounded-3xl p-7 mt-10"><h2 className="text-2xl font-bold">Resumo operacional</h2><div className="grid md:grid-cols-3 gap-4 mt-5"><div className="bg-green-50 text-green-800 p-5 rounded-2xl"><strong>{users.filter((u) => u.status === "ATIVO").length}</strong><p>utilizadores ativos</p></div><div className="bg-blue-50 text-blue-800 p-5 rounded-2xl"><strong>{recursos.filter((r) => r.visibilidade === "PUBLICO").length}</strong><p>materiais públicos</p></div><div className="bg-amber-50 text-amber-800 p-5 rounded-2xl"><strong>{recursos.filter((r) => r.status === "INDISPONIVEL").length}</strong><p>materiais indisponíveis</p></div></div></section>
+    </main>
+  </div>;
 }
 
 export default DashboardAdmin;

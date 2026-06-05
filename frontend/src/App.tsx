@@ -12,6 +12,7 @@ import RecuperarSenha from "./pages/RecuperarSenha";
 import DashboardAdmin from "./pages/admin/DashboardAdmin";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
 import MateriaisAdmin from "./pages/admin/MateriaisAdmin";
+import CursosAdmin from "./pages/admin/CursosAdmin";
 
 function AdminRoute({ children }: { children: ReactNode }) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -74,6 +75,11 @@ function App() {
       <Route
         path="/admin/materiais"
         element={<AdminRoute><MateriaisAdmin /></AdminRoute>}
+      />
+
+      <Route
+        path="/admin/cursos"
+        element={<AdminRoute><CursosAdmin /></AdminRoute>}
       />
 
       </Routes>
