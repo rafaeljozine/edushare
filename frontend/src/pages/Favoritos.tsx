@@ -338,8 +338,9 @@ function Favoritos() {
                   </div>
 
                   <a
-                    href={`${API_URL}/uploads/${recurso.ficheiro}`}
+                    href={recurso.ficheiro}
                     target="_blank"
+                    rel="noreferrer"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition flex items-center gap-2"
                   >
 

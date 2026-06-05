@@ -53,6 +53,7 @@ function Login() {
             <h1 className="text-6xl font-black leading-tight mt-6">Aprenda, partilhe e evolua.</h1>
             <p className="text-blue-100 text-xl leading-relaxed mt-6">Uma biblioteca académica organizada para aproximar estudantes, docentes e recursos.</p>
           </div>
+           <p className="text-blue-200 text-sm">Powred By Jozine & Bobotela</p>
           <p className="text-blue-200 text-sm">Plataforma académica EduShare</p>
         </div>
       </section>

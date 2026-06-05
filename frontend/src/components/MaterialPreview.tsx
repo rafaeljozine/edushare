@@ -1,5 +1,5 @@
 import { FileText, PlayCircle } from "lucide-react";
-import API_URL from "../services/api";
+
 
 interface Props {
   ficheiro: string | null;
@@ -11,8 +11,13 @@ function MaterialPreview({ ficheiro, nome }: Props) {
     return <div className="h-56 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500">Sem ficheiro para pré-visualizar</div>;
   }
 
-  const url = `${API_URL}/uploads/${ficheiro}`;
-  const extensao = ficheiro.toLowerCase().split(".").pop() || "";
+  const url = ficheiro;
+  const extensao =
+  ficheiro
+    .split("?")[0]
+    .toLowerCase()
+    .split(".")
+    .pop() || "";
 
   if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(extensao)) {
     return <img src={url} alt={`Pré-visualização de ${nome}`} className="w-full h-64 object-contain bg-slate-950 rounded-2xl" />;

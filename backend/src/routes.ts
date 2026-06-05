@@ -6,6 +6,7 @@ import multer from "multer";
 import path from "path";
 import crypto from "crypto";
 import { enviarCodigoRecuperacao } from "./email";
+import { supabase } from "./supabase";
 
 const router = Router();
 
@@ -15,28 +16,14 @@ const emailValido = (email: string) =>
 const normalizarEmail = (email: string) =>
   String(email || "").trim().toLowerCase();
 
-const storage = multer.diskStorage({
-
-  destination: (req, file, cb) => {
-
-    cb(null, "uploads");
-
-  },
-
-  filename: (req, file, cb) => {
-
-    cb(
-      null,
-      Date.now() + path.extname(file.originalname)
-    );
-
-  }
-
-});
 
 const upload = multer({
-  storage
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 15 * 1024 * 1024
+  }
 });
+
 
 router.post("/register", async (req, res) => {
 
@@ -325,7 +312,35 @@ router.post(
         status
       } = req.body;
 
-      const ficheiro = req.file?.filename;
+      let ficheiro = "";
+
+if (req.file) {
+
+  const nomeFicheiro =
+    `${Date.now()}-${req.file.originalname}`;
+
+  const { error } =
+    await supabase.storage
+      .from("uploads")
+      .upload(
+        nomeFicheiro,
+        req.file.buffer,
+        {
+          contentType: req.file.mimetype
+        }
+      );
+
+  if (error) {
+    throw error;
+  }
+
+  const { data } =
+    supabase.storage
+      .from("uploads")
+      .getPublicUrl(nomeFicheiro);
+
+  ficheiro = data.publicUrl;
+}
 
       console.log("FICHEIRO GRAVADO:");
       console.log(ficheiro);

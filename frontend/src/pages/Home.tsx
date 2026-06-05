@@ -1031,11 +1031,10 @@ function Home() {
                           </span>
 
                           <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
-
-                            {
-                              recurso.ficheiro
-                            }
-
+                            {recurso.ficheiro
+                              ?.split(".")
+                              .pop()
+                              ?.toUpperCase()}
                           </span>
 
                           <span className="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm">
@@ -1192,16 +1191,14 @@ function Home() {
 
                       
                       <a
-                          href="https://edushare-vjma.onrender.com/uploads/1780556014959.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition"
-                        >
-
-                          <Download size={18} />
-                          Baixar Material
-
-                        </a>
+                        href={recurso.ficheiro}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl transition flex items-center gap-2"
+                      >
+                        <Download size={18} />
+                        Baixar Material
+                      </a>
 
                           
                     </div>

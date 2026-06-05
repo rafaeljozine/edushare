@@ -49,11 +49,25 @@ function Instituicao() {
     setFavoritos((atuais) => dados.favorito ? [...atuais, recurso.id] : atuais.filter((id) => id !== recurso.id));
   }
 
-  async function baixar(recurso: Recurso) {
-    await fetch(`${API_URL}/recursos/${recurso.id}/download`, { method: "PUT" });
-    window.open(`${API_URL}/uploads/${recurso.ficheiro}`, "_blank");
-    carregarTudo();
+async function baixar(recurso: Recurso) {
+
+  await fetch(
+    `${API_URL}/recursos/${recurso.id}/download`,
+    {
+      method: "PUT"
+    }
+  );
+
+  if (recurso.ficheiro) {
+    window.open(
+      recurso.ficheiro,
+      "_blank"
+    );
   }
+
+  carregarTudo();
+
+}
 
   async function abrirComentarios(recursoId: number) {
     if (comentariosAbertos.includes(recursoId)) {
