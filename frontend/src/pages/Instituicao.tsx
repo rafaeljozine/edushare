@@ -30,8 +30,7 @@ interface Recurso {
   downloads: number;
 }
 
-import PdfPreview
-from "../components/PdfPreview";
+
 
 import API_URL
 from "../services/api";
@@ -217,39 +216,50 @@ function Instituicao() {
   }
 
   function obterIconeArquivo(
-    arquivo: string
-  ) {
+  arquivo?: string | null
+) {
 
-    if (!arquivo) {
-      return "📁";
-    }
-
-    const extensao =
-      arquivo.split(".").pop();
-
-    if (
-      extensao === "pdf"
-    ) {
-      return "📕";
-    }
-
-    if (
-      extensao === "ppt" ||
-      extensao === "pptx"
-    ) {
-      return "📊";
-    }
-
-    if (
-      extensao === "doc" ||
-      extensao === "docx"
-    ) {
-      return "📘";
-    }
-
+  if (!arquivo)
     return "📁";
 
+  const extensao =
+    arquivo
+      .toLowerCase()
+      .split(".")
+      .pop();
+
+  switch (extensao) {
+
+    case "pdf":
+      return "📕";
+
+    case "doc":
+    case "docx":
+      return "📘";
+
+    case "ppt":
+    case "pptx":
+      return "📙";
+
+    case "xls":
+    case "xlsx":
+      return "📗";
+
+    case "jpg":
+    case "jpeg":
+    case "png":
+      return "🖼️";
+
+    case "zip":
+    case "rar":
+      return "📦";
+
+    default:
+      return "📄";
+
   }
+
+}
 
   const materiaisPublicos =
     useMemo(() => {
@@ -812,47 +822,27 @@ function Instituicao() {
                   <div className="flex justify-between items-start gap-6 flex-wrap">
 
                     <div className="flex gap-5">
-
-                      <div>
-
-  {
-    recurso.ficheiro?.endsWith(".pdf")
-
-    ? (
-
-      <PdfPreview
-        url={
-          `${API_URL}/uploads/${recurso.ficheiro}`
-        }
-      />
-
-    )
-
-    : (
-
-      <div className="
-      w-24
-      h-32
-      rounded-xl
-      bg-blue-50
-      flex
-      items-center
-      justify-center
-      text-5xl
-      ">
-
-        {
-          obterIconeArquivo(
-            recurso.ficheiro
-          )
-        }
-
-      </div>
-
-    )
-  }
-
+<div
+  className="
+  w-28
+  h-36
+  rounded-2xl
+  bg-linear-to-br
+  from-blue-500
+  to-blue-700
+  flex
+  items-center
+  justify-center
+  text-5xl
+  shadow-lg
+shrink-0
+"
+>
+  {obterIconeArquivo(
+    recurso.ficheiro
+  )}
 </div>
+                      
 
                       <div>
 
@@ -1015,28 +1005,27 @@ function Instituicao() {
                             <>
 
                           <button
-  onClick={() =>
-    baixarArquivo(
-      recurso
-    )
-  }
-  className="
-    bg-blue-600
-    text-white
-    px-6
-    py-3
-    rounded-2xl
-    flex
-    items-center
-    gap-2
-  "
->
+                            onClick={() =>
+                              baixarArquivo(recurso)
+                            }
+                            className="
+                            bg-blue-600
+                            hover:bg-blue-700
+                            text-white
+                            px-6
+                            py-3
+                            rounded-2xl
+                            flex
+                            items-center
+                            gap-2
+                            transition
+                            shadow-md
+                            "
+                          >
+                            <Download size={18} />
 
-  <Download size={18} />
-
-  Baixar
-
-</button>
+                            Baixar
+                          </button>
                         </>
 
                         </>
