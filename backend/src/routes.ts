@@ -316,8 +316,8 @@ router.post(
 
 if (req.file) {
 
-  const nomeFicheiro =
-    `${Date.now()}-${req.file.originalname}`;
+const nomeFicheiro =
+  `${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
 
   const { error } =
     await supabase.storage
