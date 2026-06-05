@@ -42,7 +42,6 @@ function SetupAdmin() {
             email,
             senha,
             curso: "Administração",
-            ano: 0,
             role: "ADMIN"
           })
           }

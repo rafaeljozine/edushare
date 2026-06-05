@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import type { ReactNode } from "react";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -6,10 +7,16 @@ import Home from "./pages/Home";
 import Instituicao from "./pages/Instituicao";
 import Favoritos from "./pages/Favoritos";
 import SetupAdmin from "./pages/SetupAdmin";
+import RecuperarSenha from "./pages/RecuperarSenha";
 
 import DashboardAdmin from "./pages/admin/DashboardAdmin";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
 import MateriaisAdmin from "./pages/admin/MateriaisAdmin";
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  return user.role === "ADMIN" ? children : <Navigate to="/" replace />;
+}
 
 function App() {
 
@@ -35,6 +42,11 @@ function App() {
         />
 
         <Route
+          path="/recuperar-senha"
+          element={<RecuperarSenha />}
+        />
+
+        <Route
           path="/home"
           element={<Home />}
         />
@@ -51,17 +63,17 @@ function App() {
 
       <Route
         path="/admin"
-        element={<DashboardAdmin />}
+        element={<AdminRoute><DashboardAdmin /></AdminRoute>}
       />
 
       <Route
         path="/admin/usuarios"
-        element={<UsuariosAdmin />}
+        element={<AdminRoute><UsuariosAdmin /></AdminRoute>}
       />
 
       <Route
         path="/admin/materiais"
-        element={<MateriaisAdmin />}
+        element={<AdminRoute><MateriaisAdmin /></AdminRoute>}
       />
 
       </Routes>

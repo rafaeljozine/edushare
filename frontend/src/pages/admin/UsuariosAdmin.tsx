@@ -1,627 +1,139 @@
-/// src/pages/admin/UsuariosAdmin.tsx
-
-import {
-  useEffect,
-  useMemo,
-  useState
-} from "react";
-
-import {
-  Search,
-  Shield,
-  User,
-  GraduationCap,
-  Lock,
-  Unlock,
-  Crown,
-  Trash2
-} from "lucide-react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Crown, Lock, Pencil, Search, Trash2, Unlock, User, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import API_URL from "../../services/api";
 
 interface UserType {
   id: number;
   nome: string;
   email: string;
   curso: string;
-  ano: number;
-  role: string;
-  status: string;
+  role: "USER" | "ADMIN";
+  status: "ATIVO" | "BLOQUEADO";
 }
 
-import API_URL
-from "../../services/api";
+const cursos = ["Informática", "Direito", "Contabilidade", "Engenharia Civil", "Medicina", "Administração"];
 
 function UsuariosAdmin() {
+  const navigate = useNavigate();
+  const userLogado = JSON.parse(localStorage.getItem("user") || "{}");
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [pesquisa, setPesquisa] = useState("");
+  const [filtro, setFiltro] = useState("TODOS");
+  const [editando, setEditando] = useState<UserType | null>(null);
+  const [mensagem, setMensagem] = useState("");
+  const [erro, setErro] = useState("");
 
-  const [
-    users,
-    setUsers
-  ] = useState<UserType[]>([]);
-
-  const [
-    pesquisa,
-    setPesquisa
-  ] = useState("");
-
-  const [
-    filtroStatus,
-    setFiltroStatus
-  ] = useState("TODOS");
-
-  const [
-    mensagem,
-    setMensagem
-  ] = useState("");
-
-  const [
-    utilizadorParaEliminar,
-    setUtilizadorParaEliminar
-  ] = useState<UserType | null>(null);
-
-  const userLogado =
-    JSON.parse(
-      localStorage.getItem(
-        "user"
-      ) || "{}"
-    );
-
-  useEffect(() => {
-
-    carregarUsers();
-
-  }, []);
-
-  function mostrarMensagem(
-    texto: string
-  ) {
-
-    setMensagem(texto);
-
-    setTimeout(() => {
-
-      setMensagem("");
-
-    }, 3000);
-
-  }
+  useEffect(() => { carregarUsers(); }, []);
 
   async function carregarUsers() {
-
-    try {
-
-      const resposta =
-        await fetch(
-          `${API_URL}/users`
-        );
-
-      const dados =
-        await resposta.json();
-
-      setUsers(dados);
-
-    } catch (erro) {
-
-      console.log(erro);
-
-    }
-
+    const resposta = await fetch(`${API_URL}/users`);
+    const dados = await resposta.json();
+    if (resposta.ok) setUsers(dados); else setErro(dados.erro);
   }
 
-  async function alterarStatus(
-    id: number,
-    status: string
-  ) {
-
-    try {
-
-      const statusLimpo =
-        status?.trim();
-
-      const endpoint =
-        statusLimpo === "ATIVO"
-          ? "bloquear"
-          : "desbloquear";
-
-      const resposta =
-        await fetch(
-          `${API_URL}/users/${id}/${endpoint}`,
-          {
-            method: "PUT"
-          }
-        );
-
-      if (resposta.ok) {
-
-        carregarUsers();
-
-        mostrarMensagem(
-          statusLimpo === "ATIVO"
-            ? "Utilizador bloqueado"
-            : "Utilizador desbloqueado"
-        );
-
-      }
-
-    } catch (erro) {
-
-      console.log(erro);
-
-    }
-
+  function avisar(texto: string) {
+    setMensagem(texto);
+    setTimeout(() => setMensagem(""), 3000);
   }
 
-  async function eliminarUtilizador(
-    id: number
-  ) {
-
-    try {
-
-      const resposta =
-        await fetch(
-          `${API_URL}/users/${id}`,
-          {
-            method: "DELETE"
-          }
-        );
-
-      if (resposta.ok) {
-
-        mostrarMensagem(
-          "Utilizador eliminado"
-        );
-
-        setUtilizadorParaEliminar(null);
-
-        carregarUsers();
-
-      }
-
-    } catch (erro) {
-
-      console.log(erro);
-
-    }
-
+  async function salvar(evento: FormEvent) {
+    evento.preventDefault();
+    if (!editando) return;
+    const resposta = await fetch(`${API_URL}/users/${editando.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editando)
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) return setErro(dados.erro);
+    setEditando(null);
+    await carregarUsers();
+    avisar("Utilizador atualizado com sucesso.");
   }
 
-  const utilizadoresFiltrados =
-    useMemo(() => {
+  async function alterarStatus(user: UserType) {
+    const endpoint = user.status === "ATIVO" ? "bloquear" : "desbloquear";
+    const resposta = await fetch(`${API_URL}/users/${user.id}/${endpoint}`, { method: "PUT" });
+    if (resposta.ok) {
+      await carregarUsers();
+      avisar(user.status === "ATIVO" ? "Utilizador bloqueado." : "Utilizador desbloqueado.");
+    }
+  }
 
-      return users
+  async function eliminar(user: UserType) {
+    if (!confirm(`Eliminar permanentemente a conta de ${user.nome} e os seus materiais?`)) return;
+    const resposta = await fetch(`${API_URL}/users/${user.id}`, { method: "DELETE" });
+    if (resposta.ok) {
+      await carregarUsers();
+      avisar("Utilizador eliminado.");
+    }
+  }
 
-        .filter((user) => {
+  const filtrados = useMemo(() => users.filter((user) =>
+    (filtro === "TODOS" || user.status === filtro || user.role === filtro) &&
+    `${user.nome} ${user.email} ${user.curso}`.toLowerCase().includes(pesquisa.toLowerCase())
+  ), [users, pesquisa, filtro]);
 
-          if (filtroStatus === "TODOS") {
-
-            return true;
-
-          }
-
-          return user.status === filtroStatus;
-
-        })
-
-        .filter((user) => {
-
-          const texto =
-            `
-            ${user.nome}
-            ${user.email}
-            ${user.curso}
-            `
-              .toLowerCase();
-
-          return texto.includes(
-            pesquisa.toLowerCase()
-          );
-
-        });
-
-    }, [users, pesquisa, filtroStatus]);
-
-  const totalAdmins =
-    users.filter(
-      (user) => user.role === "ADMIN"
-    ).length;
-
-  const totalAtivos =
-    users.filter(
-      (user) => user.status === "ATIVO"
-    ).length;
-
-  const totalBloqueados =
-    users.filter(
-      (user) => user.status === "BLOQUEADO"
-    ).length;
+  const estatisticas: Array<[string, number, LucideIcon, string]> = [
+    ["Utilizadores", users.length, Users, "text-blue-600"],
+    ["Administradores", users.filter((u) => u.role === "ADMIN").length, Crown, "text-purple-600"],
+    ["Ativos", users.filter((u) => u.status === "ATIVO").length, Unlock, "text-green-600"],
+    ["Bloqueados", users.filter((u) => u.status === "BLOQUEADO").length, Lock, "text-red-600"]
+  ];
 
   return (
-
-    <div className="min-h-screen bg-slate-100 p-8">
-
-      {mensagem && (
-
-        <div className="fixed top-5 right-5 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50">
-
-          {mensagem}
-
+    <div className="min-h-screen bg-slate-100">
+      <header className="bg-slate-950 text-white px-6 py-5">
+        <div className="max-w-7xl mx-auto flex items-center gap-4">
+          <button onClick={() => navigate("/admin")} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl"><ArrowLeft /></button>
+          <div><h1 className="text-2xl font-bold">Gestão de utilizadores</h1><p className="text-slate-400">Contas, acessos e permissões</p></div>
         </div>
+      </header>
 
-      )}
+      {mensagem && <div className="fixed top-5 right-5 bg-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50">{mensagem}</div>}
+      {erro && <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50" onClick={() => setErro("")}>{erro}</div>}
 
-      {utilizadorParaEliminar && (
-
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-          <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full mx-4">
-
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-
-              Eliminar utilizador?
-
-            </h2>
-
-            <p className="text-gray-500 mb-6">
-
-              Tens a certeza que queres eliminar <strong>{utilizadorParaEliminar.nome}</strong>? Esta ação é irreversível.
-
-            </p>
-
-            <div className="flex gap-3">
-
-              <button
-                onClick={() =>
-                  setUtilizadorParaEliminar(null)
-                }
-                className="
-                  flex-1
-                  px-6
-                  py-3
-                  rounded-2xl
-                  border
-                  border-gray-200
-                  text-gray-600
-                  font-medium
-                  hover:bg-gray-50
-                  transition
-                "
-              >
-
-                Cancelar
-
-              </button>
-
-              <button
-                onClick={() =>
-                  eliminarUtilizador(
-                    utilizadorParaEliminar.id
-                  )
-                }
-                className="
-                  flex-1
-                  px-6
-                  py-3
-                  rounded-2xl
-                  bg-red-700
-                  hover:bg-red-800
-                  text-white
-                  font-medium
-                  transition
-                "
-              >
-
-                Sim, eliminar
-
-              </button>
-
+      {editando && <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center z-50 p-5">
+        <form onSubmit={salvar} className="bg-white rounded-3xl p-7 w-full max-w-lg shadow-2xl">
+          <h2 className="text-2xl font-bold">Editar utilizador</h2>
+          <div className="grid gap-4 mt-6">
+            <input required className="border p-4 rounded-2xl" value={editando.nome} onChange={(e) => setEditando({ ...editando, nome: e.target.value })} />
+            <input required type="email" className="border p-4 rounded-2xl" value={editando.email} onChange={(e) => setEditando({ ...editando, email: e.target.value })} />
+            <select required className="border p-4 rounded-2xl bg-white" value={editando.curso} onChange={(e) => setEditando({ ...editando, curso: e.target.value })}>{cursos.map((curso) => <option key={curso}>{curso}</option>)}</select>
+            <div className="grid grid-cols-2 gap-4">
+              <select disabled={editando.id === userLogado.id} className="border p-4 rounded-2xl bg-white disabled:bg-slate-100" value={editando.role} onChange={(e) => setEditando({ ...editando, role: e.target.value as UserType["role"] })}><option value="USER">Utilizador</option><option value="ADMIN">Administrador</option></select>
+              <select disabled={editando.id === userLogado.id} className="border p-4 rounded-2xl bg-white disabled:bg-slate-100" value={editando.status} onChange={(e) => setEditando({ ...editando, status: e.target.value as UserType["status"] })}><option value="ATIVO">Ativo</option><option value="BLOQUEADO">Bloqueado</option></select>
             </div>
-
           </div>
-
-        </div>
-
-      )}
-
-      <div className="mb-10">
-
-        <h1 className="text-5xl font-bold text-gray-800">
-
-          Gestão de Utilizadores
-
-        </h1>
-
-        <p className="text-gray-500 mt-3 text-lg">
-
-          Controle e moderação dos utilizadores da plataforma.
-
-        </p>
-
-      </div>
-
-      <div className="grid md:grid-cols-4 gap-6 mb-10">
-
-        <div className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition">
-
-          <User
-            size={40}
-            className="text-blue-600"
-          />
-
-          <p className="text-gray-500 mt-4">
-
-            Utilizadores
-
-          </p>
-
-          <h2 className="text-5xl font-bold mt-2">
-
-            {users.length}
-
-          </h2>
-
-        </div>
-
-        <div className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition">
-
-          <Shield
-            size={40}
-            className="text-purple-600"
-          />
-
-          <p className="text-gray-500 mt-4">
-
-            Administradores
-
-          </p>
-
-          <h2 className="text-5xl font-bold mt-2">
-
-            {totalAdmins}
-
-          </h2>
-
-        </div>
-
-        <div className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition">
-
-          <Unlock
-            size={40}
-            className="text-green-600"
-          />
-
-          <p className="text-gray-500 mt-4">
-
-            Activos
-
-          </p>
-
-          <h2 className="text-5xl font-bold mt-2">
-
-            {totalAtivos}
-
-          </h2>
-
-        </div>
-
-        <div className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition">
-
-          <Lock
-            size={40}
-            className="text-red-500"
-          />
-
-          <p className="text-gray-500 mt-4">
-
-            Bloqueados
-
-          </p>
-
-          <h2 className="text-5xl font-bold mt-2">
-
-            {totalBloqueados}
-
-          </h2>
-
-        </div>
-
-      </div>
-
-      <div className="bg-white rounded-3xl shadow-md p-6 mb-8">
-
-        <div className="grid md:grid-cols-2 gap-4">
-
-          <div className="relative">
-
-            <Search
-              className="absolute left-4 top-4 text-gray-400"
-              size={20}
-            />
-
-            <input
-              type="text"
-              placeholder="Pesquisar utilizador..."
-              className="w-full border border-gray-200 rounded-2xl pl-12 pr-4 py-4 outline-none focus:border-blue-500"
-              value={pesquisa}
-              onChange={(e) =>
-                setPesquisa(e.target.value)
-              }
-            />
-
-          </div>
-
-          <select
-            className="border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:border-blue-500"
-            value={filtroStatus}
-            onChange={(e) =>
-              setFiltroStatus(e.target.value)
-            }
-          >
-
-            <option value="TODOS">
-
-              Todos os estados
-
-            </option>
-
-            <option value="ATIVO">
-
-              Activos
-
-            </option>
-
-            <option value="BLOQUEADO">
-
-              Bloqueados
-
-            </option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-      <div className="grid gap-5">
-
-        {utilizadoresFiltrados.map(
-          (user) => (
-
-            <div
-              key={user.id}
-              className="bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition"
-            >
-
-              <div className="flex justify-between items-center flex-wrap gap-5">
-
-                <div className="flex items-center gap-5">
-
-                  <div className="w-20 h-20 rounded-2xl bg-blue-100 flex items-center justify-center">
-
-                    <User
-                      size={35}
-                      className="text-blue-600"
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <div className="flex items-center gap-3 flex-wrap">
-
-                      <h2 className="text-2xl font-bold text-gray-800">
-
-                        {user.nome}
-
-                      </h2>
-
-                      {user.role === "ADMIN" && (
-
-                        <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm flex items-center gap-2">
-
-                          <Crown size={14} />
-
-                          Admin
-
-                        </span>
-
-                      )}
-
-                    </div>
-
-                    <p className="text-gray-500 mt-2">
-
-                      {user.email}
-
-                    </p>
-
-                    <div className="flex gap-3 mt-4 flex-wrap">
-
-                      {user.curso && (
-
-                        <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm flex items-center gap-2">
-
-                          <GraduationCap size={14} />
-
-                          {user.curso}
-
-                        </span>
-
-                      )}
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-                <div className="flex gap-3">
-
-                  {user.role !== "ADMIN" &&
-                   user.id !== userLogado.id && (
-
-                    <button
-                      onClick={() =>
-                        alterarStatus(
-                          user.id,
-                          user.status
-                        )
-                      }
-                      className={`
-                        px-6 py-3 rounded-2xl text-white transition font-medium shadow-md
-
-                        ${
-                          user.status === "ATIVO"
-                            ? "bg-red-500 hover:bg-red-600"
-                            : "bg-blue-600 hover:bg-blue-700"
-                        }
-                      `}
-                    >
-
-                      {user.status === "ATIVO"
-                        ? "Bloquear"
-                        : "Desbloquear"}
-
-                    </button>
-
-                  )}
-
-                  {user.role !== "ADMIN" &&
-                   user.id !== userLogado.id && (
-
-                    <button
-                      onClick={() =>
-                        setUtilizadorParaEliminar(user)
-                      }
-                      className="
-                        bg-red-700
-                        hover:bg-red-800
-                        text-white
-                        px-5
-                        py-3
-                        rounded-2xl
-                        shadow-md
-                      "
-                    >
-                      <Trash2 size={18} />
-                      Eliminar
-
-                    </button>
-
-                  )}
-
-                </div>
-
-              </div>
-
+          <div className="flex gap-3 mt-7"><button type="button" onClick={() => setEditando(null)} className="flex-1 border p-4 rounded-2xl">Cancelar</button><button className="flex-1 bg-blue-600 text-white p-4 rounded-2xl font-semibold">Guardar</button></div>
+        </form>
+      </div>}
+
+      <main className="max-w-7xl mx-auto p-6">
+        <section className="grid md:grid-cols-4 gap-5 my-6">
+          {estatisticas.map(([rotulo, valor, Icone, cor]) => <div key={rotulo} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200"><Icone className={cor} /><p className="text-slate-500 mt-4">{rotulo}</p><strong className="text-4xl">{valor}</strong></div>)}
+        </section>
+
+        <section className="bg-white p-5 rounded-3xl border border-slate-200 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1"><Search className="absolute left-4 top-4 text-slate-400" size={20} /><input className="w-full border p-4 pl-12 rounded-2xl" placeholder="Pesquisar por nome, e-mail ou curso" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} /></div>
+          <select className="border p-4 rounded-2xl bg-white" value={filtro} onChange={(e) => setFiltro(e.target.value)}><option value="TODOS">Todos</option><option value="ADMIN">Administradores</option><option value="ATIVO">Ativos</option><option value="BLOQUEADO">Bloqueados</option></select>
+        </section>
+
+        <section className="grid gap-4 mt-6">
+          {filtrados.map((user) => <article key={user.id} className="bg-white p-6 rounded-3xl border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div className="flex items-center gap-4"><div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center"><User /></div><div><div className="flex gap-2 items-center"><h2 className="font-bold text-xl">{user.nome}</h2>{user.role === "ADMIN" && <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">ADMIN</span>}</div><p className="text-slate-500">{user.email} · {user.curso}</p><span className={`inline-block mt-2 text-xs px-3 py-1 rounded-full ${user.status === "ATIVO" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{user.status}</span></div></div>
+            <div className="flex gap-2">
+              <button onClick={() => setEditando(user)} className="p-3 bg-blue-50 text-blue-700 rounded-xl" title="Editar"><Pencil size={19} /></button>
+              {user.id !== userLogado.id && <button onClick={() => alterarStatus(user)} className="p-3 bg-amber-50 text-amber-700 rounded-xl" title={user.status === "ATIVO" ? "Bloquear" : "Desbloquear"}>{user.status === "ATIVO" ? <Lock size={19} /> : <Unlock size={19} />}</button>}
+              {user.id !== userLogado.id && <button onClick={() => eliminar(user)} className="p-3 bg-red-50 text-red-700 rounded-xl" title="Eliminar"><Trash2 size={19} /></button>}
             </div>
-
-          )
-        )}
-
-      </div>
-
+          </article>)}
+        </section>
+      </main>
     </div>
-
   );
-
 }
 
 export default UsuariosAdmin;
