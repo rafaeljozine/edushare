@@ -1,6 +1,14 @@
 import nodemailer from "nodemailer";
 
 function getTransporter() {
+
+  console.log({
+    SMTP_HOST: process.env.SMTP_HOST,
+    SMTP_PORT: process.env.SMTP_PORT,
+    SMTP_USER: process.env.SMTP_USER ? "EXISTE" : "VAZIO",
+    SMTP_PASS: process.env.SMTP_PASS ? "EXISTE" : "VAZIO"
+  });
+
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
