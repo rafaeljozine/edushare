@@ -11,9 +11,14 @@ function getTransporter() {
 
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    throw new Error("SMTP_NOT_CONFIGURED");
-  }
+console.log("SMTP_HOST:", SMTP_HOST);
+console.log("SMTP_PORT:", SMTP_PORT);
+console.log("SMTP_USER:", SMTP_USER);
+console.log("SMTP_PASS:", SMTP_PASS ? "EXISTE" : "VAZIO");
+
+if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
+  throw new Error("SMTP_NOT_CONFIGURED");
+}
 
   return nodemailer.createTransport({
     host: SMTP_HOST,
