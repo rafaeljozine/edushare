@@ -210,12 +210,13 @@ router.post("/password/forgot", async (req, res) => {
 
     res.json({ mensagem: "Código enviado. Verifique o seu e-mail" });
   } catch (erro) {
-    console.log(erro);
-    const mensagem = erro instanceof Error && erro.message === "SMTP_NOT_CONFIGURED"
-      ? "O envio de e-mail ainda não está configurado no servidor"
-      : "Não foi possível enviar o código";
-    res.status(500).json({ erro: mensagem });
-  }
+  console.error("ERRO RECUPERAR SENHA:");
+  console.error(erro);
+
+  res.status(500).json({
+    erro: String(erro)
+  });
+}
 });
 
 router.post("/password/reset", async (req, res) => {
