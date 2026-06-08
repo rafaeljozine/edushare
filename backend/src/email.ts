@@ -20,15 +20,15 @@ if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
   throw new Error("SMTP_NOT_CONFIGURED");
 }
 
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    secure: Number(SMTP_PORT) === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS
-    }
-  });
+ return nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS
+  }
+});
 }
 
 export async function enviarCodigoRecuperacao(
