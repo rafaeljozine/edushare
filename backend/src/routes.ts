@@ -291,11 +291,8 @@ router.post(
   "/recursos",
   upload.single("arquivo"),
   async (req, res) => {
-
     try {
-
       console.log("========== NOVO UPLOAD ==========");
-
       console.log("BODY:");
       console.log(req.body);
 
@@ -315,40 +312,43 @@ router.post(
 
       let ficheiro = "";
 
-if (req.file) {
+      if (req.file) {
+        const extensao =
+          req.file.originalname
+            .split(".")
+            .pop();
 
-const nomeSeguro =
-  req.file.originalname
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9.-]/g, "-");
+        const nomeFicheiro =
+          `${Date.now()}.${extensao}`;
 
-const nomeFicheiro =
-  `${Date.now()}-${nomeSeguro}`;
-  const { error } =
-  await supabase.storage
-    .from("uploads")
-    .upload(
-      nomeFicheiro,
-      req.file.buffer,
-      {
-        contentType: req.file.mimetype
+        console.log("NOME FICHEIRO:");
+        console.log(nomeFicheiro);
+
+        const { error } =
+          await supabase.storage
+            .from("uploads")
+            .upload(
+              nomeFicheiro,
+              req.file.buffer,
+              {
+                contentType: req.file.mimetype,
+                upsert: false
+              }
+            );
+
+        if (error) {
+          console.log("ERRO SUPABASE:");
+          console.log(JSON.stringify(error, null, 2));
+          throw error;
+        }
+
+        const { data } =
+          supabase.storage
+            .from("uploads")
+            .getPublicUrl(nomeFicheiro);
+
+        ficheiro = data.publicUrl;
       }
-    );
-
-if (error) {
-  console.log("ERRO SUPABASE:");
-  console.log(JSON.stringify(error, null, 2));
-  throw error;
-}
-
-  const { data } =
-    supabase.storage
-      .from("uploads")
-      .getPublicUrl(nomeFicheiro);
-
-  ficheiro = data.publicUrl;
-}
 
       console.log("FICHEIRO GRAVADO:");
       console.log(ficheiro);
@@ -390,21 +390,14 @@ if (error) {
       console.log(resultado.rows[0]);
 
       res.json(resultado.rows[0]);
-
     } catch (erro) {
-
-      console.log(
-        "ERRO AO INSERIR RECURSO:"
-      );
-
+      console.log("ERRO AO INSERIR RECURSO:");
       console.log(erro);
 
       res.status(500).json({
         erro: "Erro interno"
       });
-
     }
-
   }
 );
 
