@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-
 console.log("SMTP_HOST =", process.env.SMTP_HOST);
 console.log("SMTP_PORT =", process.env.SMTP_PORT);
 console.log("SMTP_USER =", process.env.SMTP_USER);
@@ -16,7 +15,6 @@ import { inicializarBanco } from "./initDb";
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
 app.use(
@@ -25,6 +23,11 @@ app.use(
     path.join(process.cwd(), "uploads")
   )
 );
+
+// Rota de teste
+app.get("/", (req, res) => {
+  res.send("EduShare API online!");
+});
 
 app.use(routes);
 
