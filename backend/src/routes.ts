@@ -321,19 +321,21 @@ const nomeFicheiro =
   `${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
 
   const { error } =
-    await supabase.storage
-      .from("uploads")
-      .upload(
-        nomeFicheiro,
-        req.file.buffer,
-        {
-          contentType: req.file.mimetype
-        }
-      );
+  await supabase.storage
+    .from("uploads")
+    .upload(
+      nomeFicheiro,
+      req.file.buffer,
+      {
+        contentType: req.file.mimetype
+      }
+    );
 
-  if (error) {
-    throw error;
-  }
+if (error) {
+  console.log("ERRO SUPABASE:");
+  console.log(JSON.stringify(error, null, 2));
+  throw error;
+}
 
   const { data } =
     supabase.storage
